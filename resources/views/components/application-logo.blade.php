@@ -1,0 +1,1 @@
+<img src="{{ asset('images/CTU-Logo.png') }}" {{ $attributes->merge(['class' => 'h-20 w-auto']) }} alt="CTU Logo">

@@ -30,6 +30,10 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+
+            'role' => 1, // 1 = Student
+        'id_number' => fake()->unique()->numerify('2026-####'), // e.g., 2026-1234
+        'rfid_number' => fake()->unique()->numerify('##########'), // 10-digit RFID
         ];
     }
 

@@ -37,9 +37,11 @@ class DatabaseSeeder extends Seeder
         'role' => 2,
     ]);
 
+    \App\Models\User::factory(100)->create();
+
     // Create a Sample Student (Role 1)
     \App\Models\User::create([
-        'name' => 'Juan Dela Cruz',
+        'name' => 'John Carlo C. Arias',
         'email' => 'student@ctu.edu.ph',
         'password' => bcrypt('password123'),
         'role' => 1,

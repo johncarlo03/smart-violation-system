@@ -66,19 +66,33 @@
 
                     <h3 class="text-lg font-bold mb-4">Report New Violation</h3>
 
-                    {{-- <form method="POST" action="{{ route('violations.store') }}"> --}}
+                    {{-- <form method="POST" action="{{ route('violations.store') }}" enctype="multipart/form-data">
+                        --}}
                         @csrf
                         <div class="mb-4">
                             <x-input-label for="rfid_input" value="Scan RFID or Search Student" />
-                            <input type="text" id="rfid_listener" class="opacity-0 absolute" autofocus
-                                autocomplete="off">
+                            {{-- <input type="text" id="rfid_listener" class="opacity-0 absolute" autofocus
+                                autocomplete="off"> --}}
 
                             <select id="student_id" name="student_id" placeholder="Search student...">
                                 <option value="">-- Select or Scan --</option>
                                 @foreach(\App\Models\User::where('role', 1)->get() as $student)
-                                    <option value="{{ $student->id }}" data-name="{{ $student->name }}"
-                                        data-rfid="{{ $student->rfid_number }}" data-id_number="{{ $student->id_number }}">
-                                        {{ $student->name }}
+
+                                    @php
+                                        // Map Department IDs to Tailwind colors
+                                        $colors = [
+                                            1 => 'bg-red-100 text-red-700 border-red-200',   // COE
+                                            2 => 'bg-blue-100 text-blue-700 border-blue-200', // CEAS
+                                            3 => 'bg-green-100 text-green-700 border-green-200',  // CME
+                                            4 => 'bg-yellow-100 text-yellow-700 border-yellow-200',    // COT
+                                        ];
+                                        $badgeColor = $colors[$student->department_id] ?? 'bg-gray-100 text-gray-700 border-gray-200';
+                                    @endphp
+
+                                    <option value="{{ $student->id }}" data-rfid="{{ $student->rfid_number }}"
+                                        data-id_number="{{ $student->id_number }}" data-course="{{ $student->course }}"
+                                        data-year_level="{{ $student->year_level }}" data-badge_color="{{ $badgeColor }}">
+                                        {{ $student->name }} {{ $student->course }}-{{ $student->year_level }}
                                     </option>
                                 @endforeach
                             </select>
@@ -101,6 +115,19 @@
                                 rows="3" required></textarea>
                         </div>
 
+                        <div class="mb-4">
+                            <x-input-label for="evidence_image" value="Upload Evidence Photo (Optional)" />
+                            <input type="file" name="evidence_image" id="evidence_image" class="block mt-1 w-full text-sm text-gray-500
+                                    file:mr-4 file:py-2 file:px-4
+                                    file:rounded-full file:border-0
+                                    file:text-sm file:font-semibold
+                                    file:bg-indigo-50 file:text-indigo-700
+                                    hover:file:bg-indigo-100" accept="image/*">
+                            <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG. Max 2MB.</p>
+                        </div>
+
+
+
                         <div class="flex items-center gap-4">
                             <x-primary-button>Submit Report</x-primary-button>
 
@@ -120,7 +147,7 @@
 
         const offenses = {
             'Academic': ['Plagiarism', 'False Authorship/Contract Cheating', 'Collusion', 'Falsifying Data/Evidence', 'Exam Proxy', 'Grade Tampering', 'Exam Collusion', 'Test Leaking', 'Program Non-Attendance'],
-            'Non-Academic': ['Improper Uniform', 'No ID', 'Littering', 'Public Display of Affection'],
+            'Non-Academic': ['ID Policy Non-compliance', 'Improper Uniform/Haircut', 'Unauthorized Gadget Use', 'Class/Activity Disturbance', 'Damage/Misuse of School Property', 'Unauthorized After-Hours Stay', 'Speeding/Excessive Vehicle Noise', 'Unruly Behavior on Campus', 'Use of Vulgar/Profane Language', 'Possession of Gambling Tools', 'Disrespect towards Personnel/Visitors', 'Disobedience to Lawful Orders'],
             'Serious': ['Smoking on Campus', 'Vandalism', 'Gambling', 'Bullying'],
             'Very Serious': ['Possession of Illegal Drugs', 'Theft', 'Physical Assault', 'Carrying Deadly Weapons']
         };
@@ -178,9 +205,20 @@
                     const name = item.name ? escape(item.name) : 'Unknown Student';
                     const rfid = item.rfid ? escape(item.rfid) : 'No RFID';
                     const idNum = item.id_number ? escape(item.id_number) : 'No ID';
-                    return `<div class="py-1 px-2">
-                    <div class="font-bold">${name}</div>
-                    <div class="text-xs text-gray-500">ID: ${idNum}</div>
+                    const course = item.course ? escape(item.course) : 'No Course';
+                    const year_level = item.year_level ? escape(item.year_level) : 'No Year Level';
+
+                    const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
+                    
+                    return `<div class="py-2 px-3 border-b border-gray-50 flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-gray-900">${escape(item.name)}</span>
+                        <div class="text-xs text-gray-400">ID: ${escape(item.id_number || 'N/A')}</div>
+                    </div>
+                    
+                    <span class="text-[10px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
+                        ${escape(item.course)} ${escape(item.year_level)}
+                    </span>
                 </div>`;
                 },
                 item: function (item, escape) {
@@ -188,47 +226,6 @@
                     return `<div>${escape(item.name)}</div>`;
                 }
             }
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-            const rfidListener = document.getElementById('rfid_listener');
-            const studentSelect = document.getElementById('student_id');
-
-            // Initial focus
-            rfidListener.focus();
-
-            // FIX: Only steal focus back if we AREN'T clicking the dropdown
-            document.addEventListener('click', (event) => {
-                const isInteractive = event.target.closest('input, select, textarea, button');
-
-                // If the user clicked something that ISN'T an input/textarea, go back to RFID
-                if (!isInteractive) {
-                    rfidListener.focus();
-                }
-            });
-
-            rfidListener.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const scannedValue = rfidListener.value.trim();
-
-                    const options = studentSelect.options;
-                    let found = false;
-
-                    for (let i = 0; i < options.length; i++) {
-                        if (options[i].getAttribute('data-rfid') === scannedValue) {
-                            studentSelect.selectedIndex = i;
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found && scannedValue !== "") {
-                        alert("RFID " + scannedValue + " not recognized.");
-                    }
-
-                    rfidListener.value = '';
-                }
-            });
         });
     </script>
 </x-app-layout>

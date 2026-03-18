@@ -24,6 +24,9 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $deptId = fake()->numberBetween(1, 4);
+        $courses = \App\Models\Department::getCoursesFor($deptId);
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
@@ -32,8 +35,11 @@ class UserFactory extends Factory
             'remember_token' => Str::random(10),
 
             'role' => 1, // 1 = Student
-        'id_number' => fake()->unique()->numerify('2026-####'), // e.g., 2026-1234
-        'rfid_number' => fake()->unique()->numerify('##########'), // 10-digit RFID
+            'id_number' => fake()->unique()->numerify('323####'), // e.g., 2026-1234
+            'rfid_number' => fake()->unique()->numerify('##########'), // 10-digit RFID
+            'course' => fake()->randomElement($courses),
+            'year_level' => fake()->numberBetween(1, 4),
+            'department_id' => $deptId,
         ];
     }
 
@@ -42,7 +48,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

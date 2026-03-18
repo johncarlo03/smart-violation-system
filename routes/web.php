@@ -21,6 +21,13 @@ Route::get('/sao-admin/dashboard', function () {
     return view('sao-dashboard');
 })->middleware(['auth'])->name('sao.dashboard');
 
+Route::get('/dashboard', function () {
+    if (Auth::user()->role === 3) return redirect()->route('sao.dashboard');
+    if (Auth::user()->role === 2) return redirect()->route('cso.dashboard');
+    
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

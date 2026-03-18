@@ -13,6 +13,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+
     /**
      * The attributes that are mass assignable.
      *
@@ -23,6 +24,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'id_number',
+        'rfid_number',
+        'course',
+        'year_level',
+        'department_id', // Add this, remove 'department'
     ];
 
     /**

@@ -92,7 +92,7 @@
                                     <option value="{{ $student->id }}" data-rfid="{{ $student->rfid_number }}"
                                         data-id_number="{{ $student->id_number }}" data-course="{{ $student->course }}"
                                         data-year_level="{{ $student->year_level }}" data-badge_color="{{ $badgeColor }}">
-                                        {{ $student->name }} {{ $student->course }}-{{ $student->year_level }}
+                                        {{ $student->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -222,8 +222,11 @@
                 </div>`;
                 },
                 item: function (item, escape) {
+                    const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
                     // This is what shows in the bar AFTER you select someone
-                    return `<div>${escape(item.name)}</div>`;
+                    return `<div>${escape(item.name)} <span class="ml-1 text-[12px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
+                        ${escape(item.course)} ${escape(item.year_level)}
+                    </span></div>`;
                 }
             }
         });

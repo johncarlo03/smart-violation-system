@@ -21,11 +21,22 @@ class Department extends Model
     public static function getCoursesFor($departmentId)
     {
         return match ((int) $departmentId) {
-            1 => ['BSEE', 'BSME', 'BSCE', 'BSIE'], // Engineering
-            2 => ['BEED', 'BSED'],                 // Education
-            3 => ['BSTM', 'BSHM'],                 // ICT
-            4 => ['BSIT', 'BIT'],                 // Hospitality
+            1 => ['BSEE', 'BSME', 'BSCE', 'BSIE'], 
+            2 => ['BEED', 'BSED'],                 
+            3 => ['BSTM', 'BSHM'],                 
+            4 => ['BSIT', 'BIT'],                
             default => [],
         };
     }
+
+    public function getAcronymAttribute()
+{
+    return match($this->id) {
+        1 => 'COE',  // College of Engineering
+        2 => 'CEAS', // College of Education
+        3 => 'CME',// College of ICT
+        4 => 'COT', // College of Hospitality Management
+        default => 'DEPT',
+    };
+}
 }

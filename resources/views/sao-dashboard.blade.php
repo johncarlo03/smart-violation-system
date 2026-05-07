@@ -1,310 +1,161 @@
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <x-app-layout>
-
-    <div id="studentInfoModal"
-        class="fixed inset-0 z-[60] hidden bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div class="p-6 text-center">
-                <div class="mb-4">
-                    <img id="modal_student_photo" src="/images/default-avatar.png"
-                        class="w-32 h-32 rounded-full mx-auto object-cover border-4 shadow-md">
-                </div>
-
-                <h3 id="modal_student_name" class="text-xl font-bold text-gray-800"></h3>
-                <p id="modal_student_details" class="text-sm text-gray-500 mb-4"></p>
-
-                <div class="grid grid-cols-2 gap-2 text-left bg-gray-50 p-4 rounded-lg text-sm">
-                    <div><span class="text-gray-400">ID:</span> <span id="modal_student_id"
-                            class="font-semibold"></span></div>
-                    <div><span class="text-gray-400">Year:</span> <span id="modal_student_year"
-                            class="font-semibold"></span></div>
-                    <div><span class="text-gray-400">Course:</span> <span id="modal_student_course"
-                            class="font-semibold text-indigo-600"></span></div>
-                    <div><span class="text-gray-400">Department:</span> <span id="modal_student_department"
-                            class="font-semibold text-indigo-600"></span></div>
-                </div>
-
-                <div class="mt-6 flex gap-3">
-                    <button onclick="closeInfoModal()"
-                        class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">Close</button>
-                    <button onclick="closeInfoModal()"
-                        class="flex-1 px-4 py-2 bg-[#1f2937] text-white rounded-lg hover:bg-gray-700">Confirm
-                        Identity</button>
-                    {{-- <x-primary-button onclick="closeInfoModal()" class="px-4 py-2"> Confirm
-                        Identity</x-primary-button> --}}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="violationModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title"
-        role="dialog" aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
-
-            <div
-                class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-                <div class="px-4 pt-5 pb-4 bg-white sm:p-6 sm:pb-4">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">Select Violation Type</h3>
-
-                    <div class="mt-4 space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button type="button" onclick="showOffenses('Academic')"
-                                class="p-4 border rounded hover:bg-blue-50 text-left">
-                                <span class="font-bold block">Academic Violations</span>
-                                <span class="text-xs text-gray-500">e.g., Cheating, Plagiarism</span>
-                            </button>
-                            <button type="button" onclick="showOffenses('Non-Academic')"
-                                class="p-4 border rounded hover:bg-green-50 text-left">
-                                <span class="font-bold block">Non-Academic Offenses</span>
-                                <span class="text-xs text-gray-500">e.g., Dress code, ID violations</span>
-                            </button>
-                            <button type="button" onclick="showOffenses('Serious')"
-                                class="p-4 border rounded hover:bg-orange-50 text-left">
-                                <span class="font-bold block">Serious Offenses</span>
-                                <span class="text-xs text-gray-500">e.g., Vandalism, Smoking</span>
-                            </button>
-                            <button type="button" onclick="showOffenses('Very Serious')"
-                                class="p-4 border rounded hover:bg-red-50 text-left">
-                                <span class="font-bold block">Very Serious Offenses</span>
-                                <span class="text-xs text-gray-500">e.g., Drugs, Theft, Violence</span>
-                            </button>
-                        </div>
-
-                        <div id="offenseList" class="hidden mt-6 border-t pt-4">
-                            <h4 id="categoryTitle" class="font-bold text-gray-700 mb-2"></h4>
-                            <select id="specificOffense" class="block w-full border-gray-300 rounded-md shadow-sm">
-                            </select>
-                            <x-primary-button type="button" onclick="confirmViolation()" class="mt-4">Confirm
-                                Selection</x-primary-button>
-                        </div>
-                    </div>
-                </div>
-                <div class="px-4 py-3 bg-gray-50 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="button" onclick="closeModal()"
-                        class="w-full px-4 py-2 mt-3 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ Auth::user()->name }}'s Dashboard
-        </h2>
+        <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-gray-800">Student Affairs Office</h2>
+
+            <a href="{{ route('cso.dashboard') }}"
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Violation Report
+            </a>
+        </div>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-indigo-500">
+                    <div class="text-sm font-medium text-gray-500 uppercase">Total Records</div>
+                    <div class="text-3xl font-bold">{{ $totalViolations }}</div>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-orange-400">
+                    <div class="text-sm font-medium text-gray-500 uppercase">Pending Review</div>
+                    <div class="text-3xl font-bold text-orange-500">{{ $pendingReview }}</div>
+                </div>
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 border-l-4 border-red-500">
+                    <div class="text-sm font-medium text-gray-500 uppercase">Major Incidents</div>
+                    <div class="text-3xl font-bold text-red-600">{{ $majorIncidents }}</div>
+                </div>
+            </div>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Recent Violation Queue</h3>
 
-                    <h3 class="text-lg font-bold mb-4">Report New Violation</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b text-gray-600 text-xs uppercase tracking-wider">
+                                    <th class="px-4 py-3 font-semibold">Student</th>
+                                    <th class="px-4 py-3 font-semibold">Offense</th>
+                                    <th class="px-4 py-3 font-semibold">Officer (CSO)</th>
+                                    <th class="px-4 py-3 font-semibold text-center">Status</th>
+                                    <th class="px-4 py-3 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($violations as $v)
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-4 py-4">
+                                            <div class="font-bold text-gray-900">{{ $v->student->name }}</div>
+                                            <div class="text-xs text-gray-500">{{ $v->department->acronym ?? 'N/A' }} |
+                                                {{ $v->student->id_number }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-gray-700">
+                                            <span class="block font-bold">{{ $v->offense->name ?? 'N/A' }}</span>
 
-                    {{-- <form method="POST" action="{{ route('violations.store') }}" enctype="multipart/form-data">
-                        --}}
-                        @csrf
-                        <div class="mb-4">
-                            <x-input-label for="rfid_input" value="Scan RFID or Search Student" />
-                            {{-- <input type="text" id="rfid_listener" class="opacity-0 absolute" autofocus
-                                autocomplete="off"> --}}
+                                            <span class="text-[10px] text-gray-400 uppercase">{{ $v->offense->category ?? '' }}</span>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-gray-600">
+                                            {{ $v->cso->name }}
+                                        </td>
+                                        <td class="px-4 py-4 text-center">
+                                            <span
+                                                class="px-2 py-1 text-[10px] font-bold uppercase rounded-full 
+                                                        {{ $v->status === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
+                                                {{ $v->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-4 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                @if($v->evidence_image)
+                                                    <button onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                                        class="text-blue-600 hover:text-blue-800 text-xs font-bold uppercase tracking-tighter bg-blue-50 px-2 py-1 rounded">
+                                                        View Photo
+                                                    </button>
+                                                @endif
+                                                <a href="#"
+                                                    class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded text-xs font-bold hover:bg-indigo-100 transition">
+                                                    Manage
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-4 py-10 text-center text-gray-500">No violations recorded
+                                            yet.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
 
-                            <select id="student_id" name="student_id" placeholder="Search student...">
-                                <option value="">-- Select or Scan --</option>
-                                @foreach(\App\Models\User::where('role', 1)->get() as $student)
-
-                                    @php
-                                        // Map Department IDs to Tailwind colors
-                                        $colors = [
-                                            1 => 'bg-red-100 text-red-700 border-red-200',   // COE
-                                            2 => 'bg-blue-100 text-blue-700 border-blue-200', // CEAS
-                                            3 => 'bg-green-100 text-green-700 border-green-200',  // CME
-                                            4 => 'bg-yellow-100 text-yellow-700 border-yellow-200',    // COT
-                                        ];
-                                        $badgeColor = $colors[$student->department_id] ?? 'bg-gray-100 text-gray-700 border-gray-200';
-                                    @endphp
-
-                                    <option value="{{ $student->id }}" data-rfid="{{ $student->rfid_number }}"
-                                        data-id_number="{{ $student->id_number }}" data-course="{{ $student->course }}"
-                                        data-year_level="{{ $student->year_level }}" data-badge_color="{{ $badgeColor }}"
-                                        data-dept_name="{{ $student->department->acronym ?? 'N/A' }}"
-                                        data-department_id="{{ $student->department_id }}">
-                                        {{ $student->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <x-input-label for="type_display" value="Violation Category & Type" />
-                            <div class="flex gap-2">
-                                <x-text-input id="type_display" class="block mt-1 w-full bg-gray-100" readonly
-                                    placeholder="Click 'Select' to browse manual..." required />
-                                <input type="hidden" name="type" id="type_hidden"> <x-secondary-button type="button"
-                                    onclick="openModal()" class="mt-1">Select</x-secondary-button>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <x-input-label for="description" value="Details" />
-                            <textarea name="description" id="description"
-                                class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                                rows="3" required></textarea>
-                        </div>
-
-                        <div class="mb-4">
-                            <x-input-label for="evidence_image" value="Upload Evidence Photo (Optional)" />
-                            <input type="file" name="evidence_image" id="evidence_image" class="block mt-1 w-full text-sm text-gray-500
-                                    file:mr-4 file:py-2 file:px-4
-                                    file:rounded-full file:border-0
-                                    file:text-sm file:font-semibold
-                                    file:bg-indigo-50 file:text-indigo-700
-                                    hover:file:bg-indigo-100" accept="image/*">
-                            <p class="mt-1 text-xs text-gray-500">Formats: JPG, PNG. Max 2MB.</p>
-                        </div>
-
-
-
-                        <div class="flex items-center gap-4">
-                            <x-primary-button>Submit Report</x-primary-button>
-                            @if (session('status'))
-                                <p class="text-sm text-green-600">{{ session('status') }}</p>
-                            @endif
-                        </div>
-                        {{--
-                    </form> --}}
+                    <div class="mt-4">
+                        {{ $violations->links() }}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-
-    <script>
-
-        const offenses = {
-            'Academic': ['Plagiarism', 'False Authorship/Contract Cheating', 'Collusion', 'Falsifying Data/Evidence', 'Exam Proxy', 'Grade Tampering', 'Exam Collusion', 'Test Leaking', 'Program Non-Attendance'],
-            'Non-Academic': ['ID Policy Non-compliance', 'Improper Uniform/Haircut', 'Unauthorized Gadget Use', 'Class/Activity Disturbance', 'Damage/Misuse of School Property', 'Unauthorized After-Hours Stay', 'Speeding/Excessive Vehicle Noise', 'Unruly Behavior on Campus', 'Use of Vulgar/Profane Language', 'Possession of Gambling Tools', 'Disrespect towards Personnel/Visitors', 'Disobedience to Lawful Orders'],
-            'Serious': ['Smoking on Campus', 'Vandalism', 'Gambling', 'Bullying'],
-            'Very Serious': ['Possession of Illegal Drugs', 'Theft', 'Physical Assault', 'Carrying Deadly Weapons']
-        };
-
-        function openModal() {
-            document.getElementById('violationModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('violationModal').classList.add('hidden');
-        }
-
-        function showOffenses(category) {
-            const list = document.getElementById('offenseList');
-            const select = document.getElementById('specificOffense');
-            const title = document.getElementById('categoryTitle');
-
-            list.classList.remove('hidden');
-            title.innerText = category;
-
-            // Clear and fill the select
-            select.innerHTML = '';
-            offenses[category].forEach(offense => {
-                let opt = document.createElement('option');
-                opt.value = `${category}: ${offense}`;
-                opt.innerText = offense;
-                select.appendChild(opt);
-            });
-        }
-
-        function confirmViolation() {
-            const selectedValue = document.getElementById('specificOffense').value;
-            document.getElementById('type_display').value = selectedValue;
-            document.getElementById('type_hidden').value = selectedValue;
-            closeModal();
-        }
-
-        function closeInfoModal() {
-            document.getElementById('studentInfoModal').classList.add('hidden');
-        }
-
-        new TomSelect("#student_id", {
-            valueField: "id",
-            labelField: "name",
-            searchField: ["name", "id_number", "rfid"],
-            maxOptions: 10,
-
-            onChange: function (value) {
-                if (!value) return;
-
-                // Retrieve the full data object for the selected student
-                const data = this.options[value];
-                const studentPhoto = document.getElementById('modal_student_photo');
-                studentPhoto.classList.remove('border-red-700', 'border-blue-800', 'border-green-800', 'border-yellow-800', 'border-indigo-500');
-                const ringColors = {
-                    1: 'border-red-700',
-                    2: 'border-blue-800', 
-                    3: 'border-green-800',
-                    4: 'border-yellow-500' 
-                };
-
-                const studentDeptId = data.department_id;
-                const ringClass = ringColors[studentDeptId] || 'border-indigo-500';
-                console.log(studentDeptId);
-
-                studentPhoto.classList.add(ringClass);
-                // Update the Modal text content
-                document.getElementById('modal_student_name').innerText = data.name;
-                document.getElementById('modal_student_id').innerText = data.id_number || 'N/A';
-                document.getElementById('modal_student_course').innerText = data.course || 'N/A';
-                document.getElementById('modal_student_department').innerText = data.dept_name || 'N/A';
-                document.getElementById('modal_student_year').innerText = data.year_level || '';
-                // Handle Profile Photo: Check if photo exists in data, otherwise use default
-                // Assumes your profile photo is stored in the 'public' disk
-                const photoPath = data.profile_photo ? `/storage/${data.profile_photo}` : '/images/default-avatar.png';
-                document.getElementById('modal_student_photo').src = photoPath;
-
-                // Show the Modal (remove 'hidden' class)
-                document.getElementById('studentInfoModal').classList.remove('hidden');
-            },
-
-            load: function (query, callback) {
-                if (!query.length) return callback();
-
-                fetch(`/students/search?q=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(data => callback(data))
-                    .catch(() => callback());
-            },
-
-            render: {
-                option: function (item, escape) {
-                    const name = item.name ? escape(item.name) : 'Unknown Student';
-                    const rfid = item.rfid ? escape(item.rfid) : 'No RFID';
-                    const idNum = item.id_number ? escape(item.id_number) : 'No ID';
-                    const course = item.course ? escape(item.course) : 'No Course';
-                    const year_level = item.year_level ? escape(item.year_level) : 'No Year Level';
-
-                    const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
-
-                    return `<div class="py-2 px-3 border-b border-gray-50 flex items-center justify-between">
-                    <div>
-                        <span class="font-semibold text-gray-900">${escape(item.name)}</span>
-                        <div class="text-xs text-gray-400">ID: ${escape(item.id_number || 'N/A')}</div>
-                    </div>
-                    
-                    <span class="text-[10px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
-                        ${escape(item.course)} ${escape(item.year_level)}
-                    </span>
-                </div>`;
-                },
-                item: function (item, escape) {
-                    const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
-                    // This is what shows in the bar AFTER you select someone
-                    return `<div>${escape(item.name)} <span class="ml-1 text-[12px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
-                        ${escape(item.course)} ${escape(item.year_level)}
-                    </span></div>`;
-                }
-            }
-
-        });
-    </script>
+    <div id="evidenceModal"
+        class="fixed inset-0 z-[70] hidden bg-gray-900 bg-opacity-75 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="text-lg font-bold text-gray-800">Violation Evidence</h3>
+                <button onclick="closeEvidenceModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-2 bg-gray-100">
+                <img id="evidence_preview_img" src=""
+                    class="w-full h-auto max-h-[70vh] object-contain rounded shadow-inner">
+            </div>
+            <div class="p-4 bg-white text-center">
+                <button onclick="closeEvidenceModal()"
+                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
 </x-app-layout>
+
+<script>
+    function openEvidenceModal(imagePath) {
+        const modal = document.getElementById('evidenceModal');
+        const img = document.getElementById('evidence_preview_img');
+
+        // Set the source to the standard storage path
+        img.src = '/storage/' + imagePath;
+
+        // Show the modal
+        modal.classList.remove('hidden');
+
+        // Prevent background scrolling
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEvidenceModal() {
+        const modal = document.getElementById('evidenceModal');
+        modal.classList.add('hidden');
+
+        // Restore scrolling
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal if user clicks outside the white box
+    window.onclick = function (event) {
+        const modal = document.getElementById('evidenceModal');
+        if (event.target == modal) {
+            closeEvidenceModal();
+        }
+    }
+</script>

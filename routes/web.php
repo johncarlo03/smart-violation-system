@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SAOAdminController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -9,17 +11,17 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/cso/dashboard', function () {
+Route::get('/violation', function () {
     return view('cso-dashboard');
-})->middleware(['auth'])->name('cso.dashboard');
+})->middleware(['auth', 'restrict'])->name('cso.dashboard');
 
-Route::get('/sao-admin/dashboard', function () {
-    return view('sao-dashboard');
-})->middleware(['auth'])->name('sao.dashboard');
+Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
+    ->middleware(['auth', 'restrict'])
+    ->name('sao.dashboard');
 
 Route::get('/dashboard', function () {
     if (Auth::user()->role === 3) return redirect()->route('sao.dashboard');
@@ -40,5 +42,8 @@ Route::get('/students/search', function (Request $request) {
         ->limit(10)
         ->get(['id', 'name', 'rfid_number', 'id_number']);
 });
+
+Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
+
 
 require __DIR__.'/auth.php';

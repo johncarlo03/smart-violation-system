@@ -29,9 +29,9 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         if($request->user()->role === 3){
-            return redirect()->intended('/sao-admin/dashboard');
+            return redirect()->intended('/sao/dashboard');
         } elseif ($request->user()->role === 2){
-            return redirect()->intended('/cso/dashboard');
+            return redirect()->intended('/violation');
         }
         return redirect()->intended(route('dashboard', absolute: false));
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SAOAdminController;
+use App\Http\Controllers\ChatbotController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -17,10 +18,10 @@ Route::get('/', function () {
 
 Route::get('/violation', function () {
     return view('cso-dashboard');
-})->middleware(['auth', 'restrict'])->name('cso.dashboard');
+})->middleware(['auth', 'role:2'])->name('cso.dashboard');
 
 Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
-    ->middleware(['auth', 'restrict'])
+    ->middleware(['auth', 'role:3'])
     ->name('sao.dashboard');
 
 Route::get('/dashboard', function () {
@@ -44,6 +45,8 @@ Route::get('/students/search', function (Request $request) {
 });
 
 Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
+
+Route::get('/chatbot/ask', [ChatbotController::class, 'ask'])->middleware(['auth']);
 
 
 require __DIR__.'/auth.php';

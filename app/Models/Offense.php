@@ -6,5 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Offense extends Model
 {
-    //
+    public function penalties()
+{
+    // One offense has many possible penalty levels
+    return $this->hasMany(OffensePenalty::class);
+}
 }

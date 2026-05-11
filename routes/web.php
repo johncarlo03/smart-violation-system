@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\SAOAdminController;
-use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\SAO\SAOAdminController;
+use App\Http\Controllers\Student\ChatbotController;
+use App\Http\Controllers\CSO\ViolationController;
+use App\Http\Controllers\Student\StudentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -18,7 +20,7 @@ Route::get('/', function () {
 
 Route::get('/violation', function () {
     return view('cso-dashboard');
-})->middleware(['auth', 'role:2'])->name('cso.dashboard');
+})->middleware(['auth', 'role:2,3'])->name('cso.dashboard');
 
 Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
     ->middleware(['auth', 'role:3'])
@@ -37,12 +39,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/students/search', function (Request $request) {
-    return User::where('role', 1)
-        ->where('name', 'like', '%' . $request->q . '%')
-        ->limit(10)
-        ->get(['id', 'name', 'rfid_number', 'id_number']);
-});
+Route::get('/violations/records', [ViolationController::class, 'index'])
+    ->middleware(['auth', 'role:2,3'])
+    ->name('violations.index');
+
+
+Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
+// Route::get('/students/search', function (Request $request) {
+//     return User::where('role', 1)
+//         ->where('name', 'like', '%' . $request->q . '%')
+//         ->limit(10)
+//         ->get(['id', 'name', 'rfid_number', 'id_number']);
+// });
 
 Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
 

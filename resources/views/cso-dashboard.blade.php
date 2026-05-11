@@ -4,11 +4,16 @@
     src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
 <x-app-layout>
-
+    
     <div id="studentInfoModal"
         class="fixed inset-0 z-[60] hidden bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
             <div class="p-6 text-center">
+                <div id="modal_alert_container" class="mb-4 hidden">
+                    <div id="modal_alert_badge"
+                        class="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-red-600 text-white animate-pulse">
+                    </div>
+                </div>
                 <div class="mb-4">
                     <img id="modal_student_photo" src="/images/default-avatar.png"
                         class="w-32 h-32 rounded-full mx-auto object-cover border-4 shadow-md">
@@ -114,27 +119,6 @@
 
                             <select id="student_id" name="student_id" placeholder="Search student...">
                                 <option value="">-- Select or Scan --</option>
-                                @foreach(\App\Models\User::where('role', 1)->get() as $student)
-
-                                    @php
-                                        // Map Department IDs to Tailwind colors
-                                        $colors = [
-                                            1 => 'bg-red-100 text-red-700 border-red-200',   // COE
-                                            2 => 'bg-blue-100 text-blue-700 border-blue-200', // CEAS
-                                            3 => 'bg-green-100 text-green-700 border-green-200',  // CME
-                                            4 => 'bg-yellow-100 text-yellow-700 border-yellow-200',    // COT
-                                        ];
-                                        $badgeColor = $colors[$student->department_id] ?? 'bg-gray-100 text-gray-700 border-gray-200';
-                                    @endphp
-
-                                    <option value="{{ $student->id }}" data-rfid="{{ $student->rfid_number }}"
-                                        data-id_number="{{ $student->id_number }}" data-course="{{ $student->course }}"
-                                        data-year_level="{{ $student->year_level }}" data-badge_color="{{ $badgeColor }}"
-                                        data-dept_name="{{ $student->department->acronym ?? 'N/A' }}"
-                                        data-department_id="{{ $student->department_id }}">
-                                        {{ $student->name }}
-                                    </option>
-                                @endforeach
                             </select>
                         </div>
 
@@ -143,8 +127,8 @@
                             <div class="flex gap-2">
                                 <x-text-input id="type_display" class="block mt-1 w-full bg-gray-100" readonly
                                     placeholder="Click 'Select' to browse manual..." required />
-                                <input type="hidden" name="offense_id" id="type_hidden"> <x-secondary-button type="button"
-                                    onclick="openModal()" class="mt-1">Select</x-secondary-button>
+                                <input type="hidden" name="offense_id" id="type_hidden"> <x-secondary-button
+                                    type="button" onclick="openModal()" class="mt-1">Select</x-secondary-button>
                             </div>
                         </div>
 
@@ -224,12 +208,6 @@
             }
         }
         const offensesByGroup = @json(\App\Models\Offense::all()->groupBy('category'));
-        // const offenses = {
-        //     'Academic': ['Plagiarism', 'False Authorship/Contract Cheating', 'Collusion', 'Falsifying Data/Evidence', 'Exam Proxy', 'Grade Tampering', 'Exam Collusion', 'Test Leaking', 'Program Non-Attendance'],
-        //     'Non-Academic': ['ID Policy Non-compliance', 'Improper Uniform/Haircut', 'Unauthorized Gadget Use', 'Class/Activity Disturbance', 'Damage/Misuse of School Property', 'Unauthorized After-Hours Stay', 'Speeding/Excessive Vehicle Noise', 'Unruly Behavior on Campus', 'Use of Vulgar/Profane Language', 'Possession of Gambling Tools', 'Disrespect towards Personnel/Visitors', 'Disobedience to Lawful Orders'],
-        //     'Serious': ['Smoking on Campus', 'Vandalism', 'Gambling', 'Bullying'],
-        //     'Very Serious': ['Possession of Illegal Drugs', 'Theft', 'Physical Assault', 'Carrying Deadly Weapons']
-        // };
 
         function openModal() {
             document.getElementById('violationModal').classList.remove('hidden');
@@ -247,7 +225,6 @@
             list.classList.remove('hidden');
             title.innerText = category;
 
-            // Clear and fill the select
             select.innerHTML = '';
 
             const categoryOffenses = offensesByGroup[category] || [];
@@ -270,7 +247,7 @@
             const selectedId = select.value;
             const selectedName = select.options[select.selectedIndex].getAttribute('data-name');
             const category = document.getElementById('categoryTitle').innerText;
-  
+
             document.getElementById('type_display').value = `${category}: ${selectedName}`;
 
             document.getElementById('type_hidden').value = selectedId;
@@ -293,7 +270,20 @@
 
                 // Retrieve the full data object for the selected student
                 const data = this.options[value];
+                const count = parseInt(data.violation_count) || 0;
+                const studentDeptId = data.department_id;
+
+                const modalAlertContainer = document.getElementById('modal_alert_container');
+                const modalAlertBadge = document.getElementById('modal_alert_badge');
                 const studentPhoto = document.getElementById('modal_student_photo');
+
+                if (count > 0) {
+                    // Institutional Reliability: Force uppercase for authority
+                    modalAlertBadge.innerText = `REPEAT OFFENDER: ${count} CASES`;
+                    modalAlertContainer.classList.remove('hidden'); // Show the pulse
+                } else {
+                    modalAlertContainer.classList.add('hidden'); // Clean record
+                }
                 studentPhoto.classList.remove('border-red-700', 'border-blue-800', 'border-green-800', 'border-yellow-800', 'border-indigo-500');
                 const ringColors = {
                     1: 'border-red-700',
@@ -301,8 +291,9 @@
                     3: 'border-green-800',
                     4: 'border-yellow-500'
                 };
+                console.log("Current Student:", data.name, "Count:", data.violation_count);
 
-                const studentDeptId = data.department_id;
+
                 const ringClass = ringColors[studentDeptId] || 'border-indigo-500';
                 console.log(studentDeptId);
 

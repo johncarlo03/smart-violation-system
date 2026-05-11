@@ -15,7 +15,14 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard') || request()->routeIs('sao.dashboard') || request()->routeIs('cso.dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    @if(in_array(Auth::user()->role, [2, 3]))
+                        <x-nav-link :href="route('violations.index')" :active="request()->routeIs('violations.index')">
+                            {{ __('Violation Records') }}
+                        </x-nav-link>
+                    @endif
                 </div>
+                
             </div>
 
             <!-- Settings Dropdown -->
@@ -70,6 +77,11 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(in_array(Auth::user()->role, [2, 3]))
+                <x-responsive-nav-link :href="route('violations.index')" :active="request()->routeIs('violations.index')">
+                    {{ __('Violation Records') }}
+                </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

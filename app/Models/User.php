@@ -28,7 +28,7 @@ class User extends Authenticatable
         'rfid_number',
         'course',
         'year_level',
-        'department_id', // Add this, remove 'department'
+        'department_id',
     ];
 
     // app/Models/User.php
@@ -59,4 +59,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function violations()
+    {
+        // A user has many violations (foreign key is student_id)
+        return $this->hasMany(Violation::class, 'student_id');
+    }
+    
 }

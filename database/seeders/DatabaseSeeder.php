@@ -45,7 +45,7 @@ class DatabaseSeeder extends Seeder
         // 2. Now seed users who belong to those departments
         \App\Models\User::factory(100)->create();
 
-        // Create a Sample Student (Role 1)
+       
         \App\Models\User::create([
             'name' => 'John Carlo C. Arias',
             'email' => 'student@ctu.edu.ph',
@@ -56,7 +56,6 @@ class DatabaseSeeder extends Seeder
             'course' => 'BSIT',
             'id_number' => 3231028,
             'department_id' => 4,
-            //cot = 1 ceas = 2 cme = 3 cot = 4
         ]);
 
     }

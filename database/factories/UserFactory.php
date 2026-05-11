@@ -34,9 +34,9 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
 
-            'role' => 1, // 1 = Student
-            'id_number' => fake()->unique()->numerify('323####'), // e.g., 2026-1234
-            'rfid_number' => fake()->unique()->numerify('##########'), // 10-digit RFID
+            'role' => 1,
+            'id_number' => fake()->unique()->numerify('323####'),
+            'rfid_number' => fake()->unique()->numerify('##########'),
             'course' => fake()->randomElement($courses),
             'year_level' => fake()->numberBetween(1, 4),
             'department_id' => $deptId,

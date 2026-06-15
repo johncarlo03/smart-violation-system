@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_photo',
         'role',
         'id_number',
         'rfid_number',

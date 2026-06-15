@@ -15,7 +15,9 @@ class EnsureSAO
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->role === 3) {
+        if (auth()->user()->role === 4) {
+            return redirect('/superadmin/dashboard');
+        } else if (auth()->user()->role === 3) {
             return redirect('/sao/dashboard');
         } else if (auth()->user()->role === 2) {
             return redirect('/violations');

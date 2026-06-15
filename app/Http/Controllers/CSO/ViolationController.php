@@ -9,25 +9,30 @@ use Illuminate\Http\Request;
 class ViolationController extends Controller
 {
     public function index()
-    {   
+    {
         $user = auth()->user();
-        
-        $totalViolations = Violation::count();
-        $pendingReview = Violation::where('status', 'pending')->count();
+
+        $totalViolations = Violation::when($user->role != 3, function ($query) {
+            return $query->whereDate('created_at', today());
+        })->count();
+        $pendingReview = Violation::where('status', 'pending')->when($user->role != 3, function ($query) {
+            return $query->whereDate('created_at', today());
+        })->count();
+        ;
         $majorIncidents = Violation::whereHas('offense', function ($query) {
             $query->whereIn('category', ['Serious', 'Very Serious']);
         })->when($user->role != 3, function ($query) {
             return $query->whereDate('created_at', today());
-        })  ->count();
+        })->count();
 
         // 2. Get the main queue with Relationships (Eager Loading)
         $violations = Violation::with(['student', 'cso', 'department', 'offense'])
             ->latest()
-            ->when($user->role != 3, function ($query){
+            ->when($user->role != 3, function ($query) {
                 return $query->whereDate('created_at', today());
-            }) ->paginate(10);
+            })->paginate(10);
 
-        return view('violations', compact('totalViolations', 'pendingReview', 'majorIncidents', 'violations'));
+        return view('sao.violations', compact('totalViolations', 'pendingReview', 'majorIncidents', 'violations'));
     }
     public function store(Request $request)
     {

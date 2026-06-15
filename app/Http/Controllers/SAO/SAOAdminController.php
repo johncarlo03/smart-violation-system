@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Violation;
 use App\Models\Department;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 
 class SAOAdminController extends Controller
@@ -22,10 +22,12 @@ class SAOAdminController extends Controller
             ->get();
 
         $deptStats = Department::select('id', 'name')
-    ->withCount(['users as total' => function ($query) {
-        $query->join('violations', 'users.id', '=', 'violations.student_id')
-              ->where('violations.status', '!=', 'void');
-    }]) ->get();
+            ->withCount([
+                'users as total' => function ($query) {
+                    $query->join('violations', 'users.id', '=', 'violations.student_id')
+                        ->where('violations.status', '!=', 'void');
+                }
+            ])->get();
 
         // $monthlyTrend = Violation::select(
         //     DB::raw('DATE_FORMAT(created_at, "%b") as month'),
@@ -49,6 +51,17 @@ class SAOAdminController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('sao-dashboard', compact('totalViolations', 'pendingReview', 'majorIncidents', 'violations', 'topOffenses', 'deptStats'));
+        if (Auth::user()->role === 4) {
+            return view('admin-dashboard', compact(
+                'totalViolations',
+                'pendingReview',
+                'majorIncidents',
+                'violations',
+                'topOffenses',
+                'deptStats'
+            ));
+        }
+
+        return view('sao.dashboard', compact('totalViolations', 'pendingReview', 'majorIncidents', 'violations', 'topOffenses', 'deptStats'));
     }
 }

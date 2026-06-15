@@ -9,11 +9,11 @@
         class="fixed inset-0 z-[60] hidden bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
             <div class="p-6 text-center">
-                <div id="modal_alert_container" class="mb-4 hidden">
+                {{-- <div id="modal_alert_container" class="mb-4 hidden">
                     <div id="modal_alert_badge"
                         class="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-red-600 text-white animate-pulse">
                     </div>
-                </div>
+                </div> --}}
                 <div class="mb-4">
                     <img id="modal_student_photo" src="/images/default-avatar.png"
                         class="w-32 h-32 rounded-full mx-auto object-cover border-4 shadow-md">
@@ -273,17 +273,17 @@
                 const count = parseInt(data.violation_count) || 0;
                 const studentDeptId = data.department_id;
 
-                const modalAlertContainer = document.getElementById('modal_alert_container');
-                const modalAlertBadge = document.getElementById('modal_alert_badge');
+                // const modalAlertContainer = document.getElementById('modal_alert_container');
+                // const modalAlertBadge = document.getElementById('modal_alert_badge');
                 const studentPhoto = document.getElementById('modal_student_photo');
 
-                if (count > 0) {
-                    // Institutional Reliability: Force uppercase for authority
-                    modalAlertBadge.innerText = `REPEAT OFFENDER: ${count} CASES`;
-                    modalAlertContainer.classList.remove('hidden'); // Show the pulse
-                } else {
-                    modalAlertContainer.classList.add('hidden'); // Clean record
-                }
+                // if (count > 0) {
+                //     // Institutional Reliability: Force uppercase for authority
+                //     modalAlertBadge.innerText = `REPEAT OFFENDER: ${count} CASES`;
+                //     modalAlertContainer.classList.remove('hidden'); // Show the pulse
+                // } else {
+                //     modalAlertContainer.classList.add('hidden'); // Clean record
+                // }
                 studentPhoto.classList.remove('border-red-700', 'border-blue-800', 'border-green-800', 'border-yellow-800', 'border-indigo-500');
                 const ringColors = {
                     1: 'border-red-700',

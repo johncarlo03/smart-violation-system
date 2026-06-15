@@ -5,6 +5,7 @@ use App\Http\Controllers\SAO\SAOAdminController;
 use App\Http\Controllers\Student\ChatbotController;
 use App\Http\Controllers\CSO\ViolationController;
 use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Superadmin\DashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -26,7 +27,12 @@ Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
     ->middleware(['auth', 'role:3'])
     ->name('sao.dashboard');
 
+Route::get('/superadmin/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'role:4'])
+    ->name('superadmin.dashboard');
+
 Route::get('/dashboard', function () {
+    if (Auth::user()->role === 4) return redirect()->route('superadmin.dashboard');
     if (Auth::user()->role === 3) return redirect()->route('sao.dashboard');
     if (Auth::user()->role === 2) return redirect()->route('cso.dashboard');
     
@@ -52,7 +58,7 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 //         ->get(['id', 'name', 'rfid_number', 'id_number']);
 // });
 
-Route::post('/violations', [App\Http\Controllers\ViolationController::class, 'store'])->name('violations.store');
+Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store');
 
 Route::get('/chatbot/ask', [ChatbotController::class, 'ask'])->middleware(['auth']);
 

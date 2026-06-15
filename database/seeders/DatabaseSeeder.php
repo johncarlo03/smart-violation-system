@@ -30,6 +30,14 @@ class DatabaseSeeder extends Seeder
             'rfid_number' => 12345678,
         ]);
 
+        \App\Models\User::create([
+            'name' => 'SuperAdmin',
+            'email' => 'superadmin@ctu.edu.ph',
+            'password' => bcrypt('password123'),
+            'role' => 4,
+            'rfid_number' => 123456780,
+        ]);
+
         // Create a Campus Safety Officer (Role 2)
         \App\Models\User::create([
             'name' => 'CSO Officer',
@@ -57,6 +65,10 @@ class DatabaseSeeder extends Seeder
             'id_number' => 3231028,
             'department_id' => 4,
         ]);
+        
+        $this->call(OffenseSeeder::class);
+        $this->call(OffensePenaltySeeder::class);
+        
 
     }
 }

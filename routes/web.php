@@ -6,6 +6,7 @@ use App\Http\Controllers\Student\ChatbotController;
 use App\Http\Controllers\CSO\ViolationController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Superadmin\DashboardController;
+use App\Http\Controllers\Superadmin\UsersCreationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -31,10 +32,14 @@ Route::get('/superadmin/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'role:4'])
     ->name('superadmin.dashboard');
 
+Route::get('/superadmin/users', [UsersCreationController::class, 'index'])
+    ->middleware(['auth', 'role:4'])
+    ->name('superadmin.users');
+
 Route::get('/dashboard', function () {
-    if (Auth::user()->role === 4) return redirect()->route('superadmin.dashboard');
-    if (Auth::user()->role === 3) return redirect()->route('sao.dashboard');
-    if (Auth::user()->role === 2) return redirect()->route('cso.dashboard');
+    if (Auth::user()->role == 4) return redirect()->route('superadmin.dashboard');
+    if (Auth::user()->role == 3) return redirect()->route('sao.dashboard');
+    if (Auth::user()->role == 2) return redirect()->route('cso.dashboard');
     
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

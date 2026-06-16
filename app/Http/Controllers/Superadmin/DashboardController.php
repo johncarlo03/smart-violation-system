@@ -32,7 +32,7 @@ class DashboardController extends Controller
             ->get();
 
         // 4. Table Queue: System Audit Trail (The last 10 raw state changes across CTU-Danao)
-        $auditLogs = Violation::with(['student:id,name,id_number', 'cso:id,name', 'department'])
+        $auditLogs = Violation::with(['student:id,name,id_number,profile_photo', 'cso:id,name', 'department'])
             ->latest()
             ->take(10)
             ->get();

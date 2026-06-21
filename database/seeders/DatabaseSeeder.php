@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Course;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,7 +23,7 @@ class DatabaseSeeder extends Seeder
               'email' => 'test@example.com',
           ]); */
 
-        \App\Models\User::create([
+        User::create([
             'name' => 'SAO Admin',
             'email' => 'admin@ctu.edu.ph',
             'password' => bcrypt('password123'),
@@ -30,7 +31,7 @@ class DatabaseSeeder extends Seeder
             'rfid_number' => 12345678,
         ]);
 
-        \App\Models\User::create([
+        User::create([
             'name' => 'SuperAdmin',
             'email' => 'superadmin@ctu.edu.ph',
             'password' => bcrypt('password123'),
@@ -39,7 +40,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Create a Campus Safety Officer (Role 2)
-        \App\Models\User::create([
+        User::create([
             'name' => 'CSO Officer',
             'email' => 'cso@ctu.edu.ph',
             'password' => bcrypt('password123'),
@@ -49,26 +50,27 @@ class DatabaseSeeder extends Seeder
 
                 // 1. Seed Departments FIRST so they have IDs 1-4
         $this->call(DepartmentSeeder::class);
+        $this->call(CourseSeeder::class);
 
         // 2. Now seed users who belong to those departments
-        \App\Models\User::factory(100)->create();
+        User::factory(100)->create();
 
        
-        \App\Models\User::create([
+        User::create([
             'name' => 'John Carlo C. Arias',
             'email' => 'student@ctu.edu.ph',
             'password' => bcrypt('password123'),
             'role' => 1,
             'rfid_number' => 61300211875,
             'year_level' => 3,
-            'course' => 'BSIT',
+            'course_id' => '15',
             'id_number' => 3231028,
             'department_id' => 4,
         ]);
+
         
         $this->call(OffenseSeeder::class);
         $this->call(OffensePenaltySeeder::class);
-        
 
     }
 }

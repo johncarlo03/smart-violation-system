@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Department;
+use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 
@@ -14,7 +17,10 @@ class UsersCreationController extends Controller
      */
     public function index()
     {
-       return view('superadmin.users');
+        $departments = Department::all();
+        $courses = Course::all()->groupBy('department_id');
+
+        return view('superadmin.users', compact('departments', 'courses'));
     }
 
     /**
@@ -22,7 +28,7 @@ class UsersCreationController extends Controller
      */
     public function create()
     {
-        //
+
     }
 
     /**
@@ -30,7 +36,27 @@ class UsersCreationController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|string|unique:users,email',
+            'id_number' => 'required|string|unique:users,id_number',
+            'password' => 'required|confirmed|min:8',
+            'course_id' => 'required|string',
+            'department_id' => 'required|string',
+            'year_level' => 'required|string',
+            'rfid_number' => 'required|string|unique:users,rfid_number',
+            'role' => 'required|string',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        if ($request->hasFile('profile_photo')) {
+            $validated['profile_photo'] = $request
+                ->file('profile_photo')
+                ->store('profile-photos', 'public');
+        }
+        User::create($validated);
+
+        return redirect()->back()->with('success', 'User Registered Successfully.');
     }
 
     /**

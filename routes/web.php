@@ -65,6 +65,17 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 
 Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store');
 
+Route::get('/superadmin/users/create', [UsersCreationController::class, 'create']);
+Route::post('/superadmin/users', [UsersCreationController::class, 'store'])->name('user.store');
+Route::get('/departments/{department}/courses', function ($departmentId) {
+
+    return \App\Models\Course::where(
+        'department_id',
+        $departmentId
+    )->get();
+
+});
+
 Route::get('/chatbot/ask', [ChatbotController::class, 'ask'])->middleware(['auth']);
 
 

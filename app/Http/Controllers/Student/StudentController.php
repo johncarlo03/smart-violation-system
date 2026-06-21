@@ -30,7 +30,7 @@ class StudentController extends Controller
                     'id' => $student->id,
                     'name' => $student->name,
                     'id_number' => $student->id_number,
-                    'course' => $student->course,
+                    'course_name' => $student->course->name,
                     'rfid' => $student->rfid_number,
                     'year_level' => $student->year_level,
                     'department_id' => $student->department_id,

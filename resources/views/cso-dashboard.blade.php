@@ -39,8 +39,6 @@
                     <button onclick="closeInfoModal()"
                         class="flex-1 px-4 py-2 bg-[#1f2937] text-white rounded-lg hover:bg-gray-700">Confirm
                         Identity</button>
-                    {{-- <x-primary-button onclick="closeInfoModal()" class="px-4 py-2"> Confirm
-                        Identity</x-primary-button> --}}
                 </div>
             </div>
         </div>
@@ -269,21 +267,14 @@
                 if (!value) return;
 
                 // Retrieve the full data object for the selected student
-                const data = this.options[value];
+                const item = this.options[value];
+
+                const data = item;
                 const count = parseInt(data.violation_count) || 0;
                 const studentDeptId = data.department_id;
 
-                // const modalAlertContainer = document.getElementById('modal_alert_container');
-                // const modalAlertBadge = document.getElementById('modal_alert_badge');
                 const studentPhoto = document.getElementById('modal_student_photo');
 
-                // if (count > 0) {
-                //     // Institutional Reliability: Force uppercase for authority
-                //     modalAlertBadge.innerText = `REPEAT OFFENDER: ${count} CASES`;
-                //     modalAlertContainer.classList.remove('hidden'); // Show the pulse
-                // } else {
-                //     modalAlertContainer.classList.add('hidden'); // Clean record
-                // }
                 studentPhoto.classList.remove('border-red-700', 'border-blue-800', 'border-green-800', 'border-yellow-800', 'border-indigo-500');
                 const ringColors = {
                     1: 'border-red-700',
@@ -301,7 +292,7 @@
                 // Update the Modal text content
                 document.getElementById('modal_student_name').innerText = data.name;
                 document.getElementById('modal_student_id').innerText = data.id_number || 'N/A';
-                document.getElementById('modal_student_course').innerText = data.course || 'N/A';
+                document.getElementById('modal_student_course').innerText = data.course_name || 'N/A';
                 document.getElementById('modal_student_department').innerText = data.dept_name || 'N/A';
                 document.getElementById('modal_student_year').innerText = data.year_level || '';
                 // Handle Profile Photo: Check if photo exists in data, otherwise use default
@@ -318,7 +309,10 @@
 
                 fetch(`/students/search?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
-                    .then(data => callback(data))
+                    .then(data => {
+                        console.log("RAW DATA:", data);
+                        callback(data);
+                    })
                     .catch(() => callback());
             },
 
@@ -327,7 +321,7 @@
                     const name = item.name ? escape(item.name) : 'Unknown Student';
                     const rfid = item.rfid ? escape(item.rfid) : 'No RFID';
                     const idNum = item.id_number ? escape(item.id_number) : 'No ID';
-                    const course = item.course ? escape(item.course) : 'No Course';
+                    const course = item.course_name ? escape(item.course_name) : 'No Course';
                     const year_level = item.year_level ? escape(item.year_level) : 'No Year Level';
 
                     const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
@@ -339,7 +333,7 @@
                     </div>
                     
                     <span class="text-[10px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
-                        ${escape(item.course)} ${escape(item.year_level)}
+                        ${escape(item.course_name)} ${escape(item.year_level)}
                     </span>
                 </div>`;
                 },
@@ -347,7 +341,7 @@
                     const badgeColor = item.badge_color || 'bg-gray-100 text-gray-700';
                     // This is what shows in the bar AFTER you select someone
                     return `<div>${escape(item.name)} <span class="ml-1 text-[12px] uppercase font-bold px-2 py-1 rounded border ${badgeColor}">
-                        ${escape(item.course)} ${escape(item.year_level)}
+                        ${escape(item.course_name)} ${escape(item.year_level)}
                     </span></div>`;
                 }
             }

@@ -26,12 +26,17 @@ class Department extends Model
     public static function getCoursesFor($departmentId)
     {
         return match ((int) $departmentId) {
-            1 => ['BSEE', 'BSME', 'BSCE', 'BSIE'],
-            2 => ['BEED', 'BSED'],
-            3 => ['BSTM', 'BSHM'],
-            4 => ['BSIT', 'BIT'],
+            1 => ['BSEE', 'BSME', 'BSCE', 'BSIE', 'BSCpE'],
+            2 => ['BEEd', 'BTLEd', 'BSEd-MATH', 'BSEd-SCI', 'BSEd-ENG', 'BSEd-SOCSCI'],
+            3 => ['BSTM', 'BSHM', 'BSHM'],
+            4 => ['BSIT', 'BSMX', 'BIT-COMP', 'BIT-DRAFT', 'BIT-ELEC', 'BIT-ELEX'],
             default => [],
         };
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class);
     }
 
     public function getBadgeColorAttribute()

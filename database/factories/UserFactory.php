@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\Course;
 
 /**
  * @extends Factory<User>
@@ -25,7 +26,9 @@ class UserFactory extends Factory
     public function definition(): array
     {
         $deptId = fake()->numberBetween(1, 4);
-        $courses = \App\Models\Department::getCoursesFor($deptId);
+        $courseId = Course::where('department_id', $deptId)
+        ->inRandomOrder()
+        ->value('id');
 
         return [
             'name' => fake()->name(),
@@ -37,7 +40,7 @@ class UserFactory extends Factory
             'role' => 1,
             'id_number' => fake()->unique()->numerify('323####'),
             'rfid_number' => fake()->unique()->numerify('##########'),
-            'course' => fake()->randomElement($courses),
+            'course_id' => $courseId ?? 1,
             'year_level' => fake()->numberBetween(1, 4),
             'department_id' => $deptId,
         ];

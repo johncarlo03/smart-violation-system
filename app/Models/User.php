@@ -27,7 +27,7 @@ class User extends Authenticatable
         'role',
         'id_number',
         'rfid_number',
-        'course',
+        'course_id',
         'year_level',
         'department_id',
     ];
@@ -37,6 +37,11 @@ class User extends Authenticatable
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
     }
     /**
      * The attributes that should be hidden for serialization.
@@ -66,5 +71,5 @@ class User extends Authenticatable
         // A user has many violations (foreign key is student_id)
         return $this->hasMany(Violation::class, 'student_id');
     }
-    
+
 }

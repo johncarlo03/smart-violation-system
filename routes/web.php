@@ -67,6 +67,9 @@ Route::post('/violations', [ViolationController::class, 'store'])->name('violati
 
 Route::get('/superadmin/users/create', [UsersCreationController::class, 'create']);
 Route::post('/superadmin/users', [UsersCreationController::class, 'store'])->name('user.store');
+Route::delete('/superadmin/users/{user}', [UsersCreationController::class, 'destroy'])->name('user.destroy');
+Route::put('/superadmin/users/{id}', [UsersCreationController::class, 'update'])
+    ->name('user.update');
 Route::get('/departments/{department}/courses', function ($departmentId) {
 
     return \App\Models\Course::where(

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Models\Users;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,8 +20,9 @@ class UsersCreationController extends Controller
     {
         $departments = Department::all();
         $courses = Course::all()->groupBy('department_id');
+        $users = User::latest()->paginate(10);
 
-        return view('superadmin.users', compact('departments', 'courses'));
+        return view('superadmin.users', compact('departments', 'courses', 'users'));
     }
 
     /**
@@ -78,16 +80,34 @@ class UsersCreationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->id_number = $request->id_number;
+        $user->rfid_number = $request->rfid_number;
+        $user->role = $request->role;
+
+        $user->save();
+
+        return redirect()->route('superadmin.users')
+            ->with('success', 'User updated successfully');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        //
+        // Restrict profile suicide if a user tries to erase themselves
+        if (auth()->id() === $user->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own profile.');
+        }
+
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted from system records.');
     }
 }

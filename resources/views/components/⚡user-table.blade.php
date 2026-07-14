@@ -26,7 +26,7 @@ new class extends Component {
                   ->orWhere('id_number', 'like', '%' . $this->search . '%')
                   ->orWhere('rfid_number', 'like', '%' . $this->search . '%');
         })
-        ->orderBy('created_at', 'desc')
+        ->orderByRaw("FIELD(role, '4', '3', '2', '1') ASC")
         ->paginate(10);
     }
 };
@@ -67,13 +67,13 @@ new class extends Component {
                         </td>
                         <td class="p-4">
                             @if($user->role == 1)
-                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-blue-50 text-blue-600">Student</span>
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">Student</span>
                             @elseif($user->role == 2)
-                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-orange-50 text-orange-600">CSO</span>
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">CSO</span>
                             @elseif($user->role == 3)
-                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-green-50 text-green-600">SAO</span>
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">SAO</span>
                             @else
-                                <span class="text-xs font-bold px-2 py-1 rounded-lg bg-indigo-50 text-indigo-600">Super Admin</span>
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">Super Admin</span>
                             @endif
                         </td>
                         <td class="p-4 text-center">

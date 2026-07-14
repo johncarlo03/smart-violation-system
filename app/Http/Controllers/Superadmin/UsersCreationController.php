@@ -9,6 +9,7 @@ use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 
 
 class UsersCreationController extends Controller
@@ -87,6 +88,7 @@ class UsersCreationController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->id_number = $request->id_number;
+        $user->password = $request->password;
         $user->rfid_number = $request->rfid_number;
         $user->role = $request->role;
 

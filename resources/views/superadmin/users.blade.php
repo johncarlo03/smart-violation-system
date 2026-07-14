@@ -1,4 +1,4 @@
-<style>
+{{-- <style>
 /* Pagination Container */
 nav[role="navigation"] {
     display: flex;
@@ -50,7 +50,7 @@ nav[role="navigation"] span.text-gray-400 {
     border-radius: 0.75rem;
     border-color: rgb(187, 187, 187);
 }
-</style>
+</style> --}}
 <x-app-layout>
     <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
 
@@ -65,7 +65,7 @@ nav[role="navigation"] span.text-gray-400 {
                             User Management
                         </h2>
                         <p class="text-sm text-gray-500 mt-1">
-                            Create, view, and modify system users and their clearanced layers.
+                            Create, view, and modify system users and role based access.
                         </p>
                     </div>
                 </div>
@@ -94,12 +94,11 @@ nav[role="navigation"] span.text-gray-400 {
                         </button>
                     </div>
 
-                    <form id="user-form" action="{{ route('user.store') }}" method="POST" class="p-6 space-y-6">
+                    <form id="user-form" action="{{ route('superadmin.users.store') }}" method="POST" class="p-6 space-y-6">
                         @csrf
                         <div id="method-container"></div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {{-- Full Name Input Field --}}
                             <div>
                                 <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
                                     Full Name
@@ -179,7 +178,7 @@ nav[role="navigation"] span.text-gray-400 {
                         {{-- Structural Role Assignment Radio Nodes --}}
                         <div>
                             <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-3">
-                                Structural Clearance Layer Assignment
+                                Lorem Ipsum
                             </label>
 
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -335,7 +334,7 @@ nav[role="navigation"] span.text-gray-400 {
         const passwordLabel = document.getElementById('password-label');
 
         const courses = @json($courses);
-        const storeRoute = "{{ route('user.store') }}";
+        const storeRoute = "{{ route('superadmin.users.store') }}";
 
         // Handle structural role logic toggles
         function toggleRoleFields(roleValue) {

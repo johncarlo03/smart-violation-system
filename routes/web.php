@@ -7,6 +7,7 @@ use App\Http\Controllers\CSO\ViolationController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\UsersCreationController;
+use App\Http\Controllers\Superadmin\OffensesCreationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
@@ -28,13 +29,29 @@ Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
     ->middleware(['auth', 'role:3'])
     ->name('sao.dashboard');
 
-Route::get('/superadmin/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'role:4'])
-    ->name('superadmin.dashboard');
+Route::middleware(['auth', 'role:4'])
+    ->prefix('superadmin')
+    ->name('superadmin.')
+    ->group(function () {
+        
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
 
-Route::get('/superadmin/users', [UsersCreationController::class, 'index'])
-    ->middleware(['auth', 'role:4'])
-    ->name('superadmin.users');
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UsersCreationController::class, 'index'])->name('index');
+            Route::get('/create', [UsersCreationController::class, 'create']);
+            Route::post('/', [UsersCreationController::class, 'store'])->name('store');
+            Route::delete('/{user}', [UsersCreationController::class, 'destroy'])->name('destroy');
+            Route::put('/{id}', [UsersCreationController::class, 'update'])->name('update');
+        });
+
+        Route::prefix('offenses')->name('offenses.')->group(function () {
+            Route::get('/', [OffensesCreationController::class, 'index'])->name('index');
+            Route::post('create', [OffensesCreationController::class, 'store'])->name('store');
+            Route::delete('{offense}', [OffensesCreationController::class, 'destroy'])->name('destroy');
+            Route::put('/{id}', [OffensesCreationController::class, 'update'])->name('update');
+        });
+});
 
 Route::get('/dashboard', function () {
     if (Auth::user()->role == 4) return redirect()->route('superadmin.dashboard');
@@ -50,11 +67,6 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/violations/records', [ViolationController::class, 'index'])
-    ->middleware(['auth', 'role:2,3'])
-    ->name('violations.index');
-
-
 Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
 // Route::get('/students/search', function (Request $request) {
 //     return User::where('role', 1)
@@ -64,12 +76,10 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 // });
 
 Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store');
+Route::get('/violations/records', [ViolationController::class, 'index'])
+    ->middleware(['auth', 'role:2,3'])
+    ->name('violations.index');
 
-Route::get('/superadmin/users/create', [UsersCreationController::class, 'create']);
-Route::post('/superadmin/users', [UsersCreationController::class, 'store'])->name('user.store');
-Route::delete('/superadmin/users/{user}', [UsersCreationController::class, 'destroy'])->name('user.destroy');
-Route::put('/superadmin/users/{id}', [UsersCreationController::class, 'update'])
-    ->name('user.update');
 Route::get('/departments/{department}/courses', function ($departmentId) {
 
     return \App\Models\Course::where(

@@ -22,6 +22,12 @@
                     </div>
                 @endif
 
+                @error('name')
+                    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
+                        <p class="text-red-500 text-sm mt-1">This <b>offense</b> already exists.</p>
+                    </div>
+                @enderror
+
                 <div class="overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
                     <div class="m-5 bg-gray-50 flex justify-between items-center">
                         <h1 class="text-lg font-black text-gray-800">Student Handbook Offenses & Rules</h1>
@@ -30,7 +36,7 @@
                             + Add New Rule
                         </button>
                     </div>
-                    <livewire:offense-table/> 
+                    <livewire:offense-table />
                 </div>
 
             </main>
@@ -62,6 +68,30 @@
                     <option value="Serious">Serious</option>
                     <option value="Very Serious">Very Serious</option>
                 </select>
+            </div>
+            <div class="border-t pt-3 mt-3">
+                <label class="block text-xs font-bold uppercase text-blue-600 mb-2">Configure Penalties</label>
+                <div class="space-y-3">
+                    @for ($i = 1; $i <= 3; $i++)
+                        @php
+                        $suffix = match ($i) {
+                                                1 => 'st',
+                                                2 => 'nd',
+                                                3 => 'rd',
+                                                default => 'th',
+                                            };
+                        @endphp
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                {{ $i .$suffix }} Penalty
+                            </label>
+
+                            {{-- Array naming structure keeps input data tied directly to the correct penalty row ID --}}
+                            <textarea name="penalties[{{ $i }}][description]" required rows="2"
+                                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm"></textarea>
+                        </div>
+                    @endfor
+                </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2">
                 <button type="button" onclick="document.getElementById('create-modal').close()"

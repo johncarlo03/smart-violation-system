@@ -91,11 +91,9 @@ new class extends Component {
                     <form action="{{ route('superadmin.offenses.update', $offense->id) }}" method="POST" class="space-y-4">
                         @csrf
                         @method('PUT')
-                        <div>
-                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Offense
-                                Name</label>
-                            <input type="text" name="name" value="{{ $offense->name }}" required
-                                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <div class="mb-2">
+                            <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Offense Name</label>
+                            <input type="text" name="name" value="{{ $offense->name }}" required class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Category</label>
@@ -112,6 +110,34 @@ new class extends Component {
                                 <option value="Very Serious" @selected($offense->category === 'Very Serious')>
                                     Very Serious</option>
                             </select>
+                        </div>
+                        <div class="border-t pt-3 mt-3">
+                            <label class="block text-xs font-bold uppercase text-blue-600 mb-2">Configure Penalties</label>
+                            <div class="space-y-3">
+                                @foreach($offense->penalties as $index => $penalty)
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-700 mb-1">
+                                            @php
+                                            $offenses = $index + 1;
+
+                                            $suffix = match ($offenses) {
+                                                1 => 'st',
+                                                2 => 'nd',
+                                                3 => 'rd',
+                                                default => 'th',
+                                            };
+                                            @endphp
+                                            {{ $penalty->level ?? $offenses . $suffix . ' Offense' }} Penalty
+                                        </label>
+                    
+                    {{-- Array naming structure keeps input data tied directly to the correct penalty row ID --}}
+                                        <textarea name="penalties[{{ $penalty->id }}][description]" 
+                                                required 
+                                                rows="2" 
+                                                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm">{{ $penalty->penalty_description }}</textarea>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                         <div class="flex justify-end space-x-2 pt-2">
                             <button type="button" onclick="document.getElementById('edit-modal-{{ $offense->id }}').close()"

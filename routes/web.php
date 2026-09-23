@@ -57,8 +57,9 @@ Route::get('/dashboard', function () {
     if (Auth::user()->role == 4) return redirect()->route('superadmin.dashboard');
     if (Auth::user()->role == 3) return redirect()->route('sao.dashboard');
     if (Auth::user()->role == 2) return redirect()->route('cso.dashboard');
+    if (Auth::user()->role == 1) return app(StudentController::class)->index();
     
-    return view('dashboard');
+    return abort(403, 'Unauthorized Role');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

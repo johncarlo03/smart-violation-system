@@ -1,5 +1,5 @@
 <x-app-layout>
-    @if (auth()->user()->role != 3)
+    {{-- @if (auth()->user()->role != 3) --}}
         <x-slot name="header">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 class="text-xl font-bold text-gray-800">Violation Management</h2>
@@ -13,7 +13,7 @@
                 </a>
             </div>
         </x-slot>
-    @endif
+    {{-- @endif --}}
 
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -80,7 +80,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-4 sm:p-6">
-                    <h3 class="text-lg font-bold text-gray-700 mb-4">Recent Violation Queue</h3>
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Violation Queue</h3>
 
                     <div class="grid grid-cols-1 gap-4 md:hidden">
                         @forelse($violations as $v)
@@ -113,7 +113,8 @@
                                 <div class="bg-gray-50 rounded-xl p-3 mb-4">
                                     <div class="text-xs font-bold text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
                                     <div class="text-[9px] text-gray-500 mt-1 uppercase tracking-widest font-bold">
-                                        {{ $v->offense->category ?? '' }}</div>
+                                        {{ $v->offense->category ?? '' }}
+                                    </div>
                                 </div>
 
                                 <div class="flex items-center justify-between pt-2 border-t border-gray-50">
@@ -130,8 +131,10 @@
                                                 </svg>
                                             </button>
                                         @endif
-                                        <a href="#"
-                                            class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow-sm">Manage</a>
+                                        <a href="{{ route('violations.manage', $v->id) }}"
+                                            class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
+                                            Manage
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -141,7 +144,7 @@
                     </div>
 
                     {{-- DESKTOP VIEW: Table (Visible only on >= 768px) --}}
-                    <div class="hidden md:block overflow-x-auto">
+                    {{-- <div class="hidden md:block overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr
@@ -169,7 +172,8 @@
                                                 @endif
                                                 <div>
                                                     <div class="font-bold text-gray-900 leading-tight">
-                                                        {{ $v->student->name }}</div>
+                                                        {{ $v->student->name }}
+                                                    </div>
                                                     <div class="text-xs text-gray-500 mt-1 uppercase font-semibold">
                                                         {{ $v->department->acronym ?? 'N/A' }} •
                                                         {{ $v->student->id_number }}
@@ -179,7 +183,8 @@
                                         </td>
                                         <td class="px-6 py-5">
                                             <div class="font-bold text-gray-800 leading-snug">
-                                                {{ $v->offense->name ?? 'N/A' }}</div>
+                                                {{ $v->offense->name ?? 'N/A' }}
+                                            </div>
                                             <div
                                                 class="inline-flex mt-2 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-black tracking-wider">
                                                 {{ $v->offense->category ?? '' }}
@@ -191,7 +196,7 @@
                                         <td class="px-6 py-5 text-center">
                                             <span
                                                 class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                    {{ $v->status === 'pending' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-green-100 text-green-700 border-green-200' }}">
+                                                            {{ $v->status === 'pending' ? 'bg-orange-100 text-orange-700 border-orange-200' : ($v->status === 'resolved' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200')}}">
                                                 {{ $v->status }}
                                             </span>
                                         </td>
@@ -202,8 +207,10 @@
                                                         class="inline-flex items-center px-3 py-2 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200 transition">View
                                                         Photo</button>
                                                 @endif
-                                                <a href="#"
-                                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">Manage</a>
+                                                <a href="{{ route('violations.manage', $v->id) }}"
+                                                    class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow-sm">
+                                                    Manage
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -211,7 +218,9 @@
                                 @endforelse
                             </tbody>
                         </table>
-                    </div>
+                    </div> --}}
+                    <livewire:manage-table />  {{-- v4 syntax --}}
+
 
                     <div class="mt-6">
                         {{ $violations->links() }}

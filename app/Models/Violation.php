@@ -3,17 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\OffensePenalty;
 
 class Violation extends Model
 {
     protected $fillable = [
         'student_id',
-        'offense_id', // Add this
+        'offense_id',
         'cso_id',
         'department_id',
+        'penalty_id',
         'description',
         'evidence_image',
-        'status'
+        'status',
+        'resolution_notes',
+        'resolved_at',
     ];
 
     public function incidents()
@@ -24,6 +28,11 @@ class Violation extends Model
     public function offense()
     {
         return $this->belongsTo(Offense::class);
+    }
+
+    public function penalty()
+    {
+        return $this->belongsTo(OffensePenalty::class, 'penalty_id');
     }
     public function student()
     {

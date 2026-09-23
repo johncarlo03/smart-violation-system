@@ -24,7 +24,7 @@ return new class extends Migration
         $table->string('evidence_image')->nullable();
         
         // Status for SAO Review
-        $table->enum('status', ['pending', 'resolved', 'void'])->default('pending');
+        $table->enum('status', ['pending', 'resolved', 'dismissed', 'appealed'])->default('pending');
         $table->timestamps();
     });
 }

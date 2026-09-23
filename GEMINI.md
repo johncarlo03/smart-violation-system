@@ -12,6 +12,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - php - 8.2.12
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
+- laravel/reverb (REVERB) - v1
 - livewire/livewire (LIVEWIRE) - v4
 - laravel/breeze (BREEZE) - v2
 - laravel/mcp (MCP) - v0
@@ -20,6 +21,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - pestphp/pest (PEST) - v3
 - phpunit/phpunit (PHPUNIT) - v11
 - alpinejs (ALPINEJS) - v3
+- laravel-echo (ECHO) - v2
 - tailwindcss (TAILWINDCSS) - v3
 
 ## Skills Activation

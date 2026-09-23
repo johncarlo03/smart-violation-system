@@ -74,16 +74,16 @@
                 <div class="space-y-3">
                     @for ($i = 1; $i <= 3; $i++)
                         @php
-                        $suffix = match ($i) {
-                                                1 => 'st',
-                                                2 => 'nd',
-                                                3 => 'rd',
-                                                default => 'th',
-                                            };
+                            $suffix = match ($i) {
+                                1 => 'st',
+                                2 => 'nd',
+                                3 => 'rd',
+                                default => 'th',
+                            };
                         @endphp
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">
-                                {{ $i .$suffix }} Penalty
+                                {{ $i . $suffix }} Penalty
                             </label>
 
                             {{-- Array naming structure keeps input data tied directly to the correct penalty row ID --}}

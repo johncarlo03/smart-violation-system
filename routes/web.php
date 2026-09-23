@@ -22,8 +22,8 @@ Route::get('/', function () {
 // })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/violation', function () {
-    return view('cso-dashboard');
-})->middleware(['auth', 'role:2,3'])->name('cso.dashboard');
+    return view('cso/cso-dashboard');
+})->middleware(['auth', 'role:2,3'])->name('cso.dashboard'); //add for teacher soon 
 
 Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
     ->middleware(['auth', 'role:3'])
@@ -76,6 +76,15 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 // });
 
 Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store');
+
+Route::get('/violations/{violation}/manage', [ViolationController::class, 'manage'])
+    ->name('violations.manage');
+
+Route::put('/violations/{violation}/resolve', [ViolationController::class, 'resolve'])
+    ->name('violations.resolve');
+
+Route::put('/violations/{violation}/dismiss', [ViolationController::class, 'dismiss'])
+    ->name('violations.dismiss');
 Route::get('/violations/records', [ViolationController::class, 'index'])
     ->middleware(['auth', 'role:2,3'])
     ->name('violations.index');

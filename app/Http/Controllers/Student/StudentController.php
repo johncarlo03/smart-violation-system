@@ -3,10 +3,56 @@
 namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Violation;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+public function index()
+{
+    $studentId = Auth::id();
+
+    // Get violations in chronological order first
+    $studentViolations = Violation::with(['offense', 'penalty'])
+        ->where('student_id', $studentId)
+        ->where('status', '!=', 'void')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+    // Calculate offense number based on chronological history
+    $offenseCounts = [];
+
+    foreach ($studentViolations as $violation) {
+        $offenseId = $violation->offense_id;
+
+        if (!isset($offenseCounts[$offenseId])) {
+            $offenseCounts[$offenseId] = 0;
+        }
+
+        $offenseCounts[$offenseId]++;
+
+        $violation->offense_number = $offenseCounts[$offenseId];
+    }
+
+    $studentViolations = $studentViolations
+        ->sortBy(function ($violation) {
+            return $violation->status === 'pending' ? 0 : 1;
+        })
+        ->values();
+
+    $totalViolationsCount = $studentViolations->count();
+
+    $pendingViolationsCount = $studentViolations
+        ->where('status', 'pending')
+        ->count();
+
+    return view('student.dashboard', compact(
+        'studentViolations',
+        'totalViolationsCount',
+        'pendingViolationsCount'
+    ));
+}
     public function search(Request $request)
     {
         $q = $request->query('q');

@@ -14,7 +14,7 @@ public function index()
     $studentId = Auth::id();
 
     // Get violations in chronological order first
-    $studentViolations = Violation::with(['offense', 'penalty'])
+    $studentViolations = Violation::with(['offense', 'penalty', 'appeals'])
         ->where('student_id', $studentId)
         ->where('status', '!=', 'void')
         ->orderBy('created_at', 'asc')

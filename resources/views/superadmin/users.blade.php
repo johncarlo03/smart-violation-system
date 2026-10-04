@@ -88,10 +88,10 @@ nav[role="navigation"] span.text-gray-400 {
                         <h3 id="form-title" class="text-lg font-black text-gray-800">
                             Register User
                         </h3>
-                        <button type="button" id="cancel-edit-btn"
-                            class="hidden text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-wider">
+                        <x-primary-button type="button" id="cancel-edit-btn"
+                            class="hidden">
                             Cancel Edit
-                        </button>
+                        </x-primary-button>
                     </div>
 
                     <form id="user-form" action="{{ route('superadmin.users.store') }}" method="POST" class="p-6 space-y-6">
@@ -127,7 +127,7 @@ nav[role="navigation"] span.text-gray-400 {
                                     rfid(if applicable)
                                 </label>
                                 <input type="number" name="rfid_number" id="input-rfid_number"
-                                    value="{{ old('rfid_number') }}" required
+                                    value="{{ old('rfid_number') }}"
                                     class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
                                 @error('rfid_number')
                                     <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
@@ -252,7 +252,12 @@ nav[role="navigation"] span.text-gray-400 {
                                             class="w-full rounded-xl border-gray-200">
                                             <option value="">Select Department</option>
                                             @foreach($departments as $department)
-                                                <option value="{{ $department->id }}">{{ $department->name }}</option>
+                                                <option
+                                                    value="{{ $department->id }}"
+                                                    {{ old('department_id') == $department->id ? 'selected' : '' }}
+                                                >
+                                                    {{ $department->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -273,14 +278,14 @@ nav[role="navigation"] span.text-gray-400 {
                                             class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
                                             Year Level
                                         </label>
-                                        <select id="year_level" name="year_level"
-                                            class="w-full rounded-xl border-gray-200">
-                                            <option value="">Select Year</option>
-                                            <option value="1">1st Year</option>
-                                            <option value="2">2nd Year</option>
-                                            <option value="3">3rd Year</option>
-                                            <option value="4">4th Year</option>
-                                        </select>
+                                        <select id="year_level" name="year_level" class="w-full rounded-xl border-gray-200">
+    <option value="">Select Year</option>
+    @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
+        <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
+            {{ $label }}
+        </option>
+    @endforeach
+</select>
                                     </div>
                                 </div>
                             </div>
@@ -288,10 +293,10 @@ nav[role="navigation"] span.text-gray-400 {
 
                         {{-- Interface Commit Form Submission Panel --}}
                         <div class="pt-4 border-t border-gray-100 flex justify-end">
-                            <button type="submit" id="submit-btn"
+                            <x-primary-button type="submit" id="submit-btn"
                                 class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black uppercase tracking-widest transition duration-200 shadow-md hover:shadow-lg active:scale-[0.98]">
                                 Register User
-                            </button>
+                            </x-primary-button>
                         </div>
                     </form>
                 </div>
@@ -377,7 +382,33 @@ nav[role="navigation"] span.text-gray-400 {
                 });
             }
         });
+        
+        function loadCourses(departmentId, selectedCourseId = null) {
+    course.innerHTML = '';
 
+    if (!departmentId) {
+        course.disabled = true;
+        course.innerHTML = '<option value="">Select Department First</option>';
+        return;
+    }
+
+    course.disabled = false;
+    course.innerHTML = '<option value="">Select Course</option>';
+
+    (courses[departmentId] || []).forEach(function (item) {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.name;
+        if (selectedCourseId && item.id == selectedCourseId) {
+            option.selected = true;
+        }
+        course.appendChild(option);
+    });
+}
+
+department.addEventListener('change', function () {
+    loadCourses(this.value);
+});
         document.querySelectorAll('.edit-user-btn').forEach(button => {
             button.addEventListener('click', function () {
                 const data = this.dataset;
@@ -474,6 +505,18 @@ nav[role="navigation"] span.text-gray-400 {
             inputPassword.required = true;
             inputPasswordConfirm.required = true;
             passwordLabel.textContent = "Password";
+        }
+
+        const oldRole = "{{ old('role') }}";
+        const oldDepartment = "{{ old('department_id') }}";
+        const oldCourse = "{{ old('course_id') }}";
+
+        if (oldRole) {
+            toggleRoleFields(oldRole);
+        }
+
+        if (oldRole == '1' && oldDepartment) {
+            loadCourses(oldDepartment, oldCourse);
         }
     });
 </script>

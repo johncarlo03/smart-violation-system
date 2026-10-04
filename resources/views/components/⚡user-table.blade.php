@@ -77,8 +77,8 @@ new class extends Component {
                             @endif
                         </td>
                         <td class="p-4 text-center">
-                            <button type="button"
-                                class="edit-user-btn px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
+                            <x-primary-button type="button"
+                                class="edit-user-btn"
                                 data-id="{{ $user->id }}"
                                 data-name="{{ $user->name }}"
                                 data-id_number="{{ $user->id_number }}"
@@ -89,13 +89,13 @@ new class extends Component {
                                 data-course_id="{{ $user->course_id ?? '' }}"
                                 data-year_level="{{ $user->year_level ?? '' }}">
                                 Edit
-                            </button>
-                            <button type="button"
-                                class="delete-user-btn px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition"
+                            </x-primary-button>
+                            <x-danger-button type="button"
+                                class="delete-user-btn"
                                 data-id="{{ $user->id }}"
                                 data-name="{{ $user->name }}">
                                 Delete
-                            </button>
+                            </x-danger-button>
                         </td>
                     </tr>
                 @empty

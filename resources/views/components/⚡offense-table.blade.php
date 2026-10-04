@@ -64,19 +64,19 @@ new class extends Component {
                         @endif
                     </td>
                     <td class="p-4 text-center space-x-2">
-                        <button onclick="document.getElementById('edit-modal-{{ $offense->id }}').showModal()"
+                        <x-primary-button onclick="document.getElementById('edit-modal-{{ $offense->id }}').showModal()"
                             class="edit-user-btn px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition">
                             Edit
-                        </button>
+                        </x-primary-button>
 
                         <form action="{{ route('superadmin.offenses.destroy', $offense->id) }}" method="POST"
-                            class="inline-block" onsubmit="return confirm('Are you sure you want to delete this rule?');">
+                            class="inline-block delete-offense-form" data-name="{{ $offense->name }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit"
-                                class="delete-user-btn px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition">
+                            <x-danger-button type="submit" 
+                                class="delete-offense-btn px-4 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition">
                                 Delete
-                            </button>
+                            </x-danger-button>
                         </form>
                     </td>
                 </tr>

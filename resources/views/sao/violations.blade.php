@@ -18,7 +18,7 @@
     <div class="py-6 sm:py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            @if (auth()->user()->role != 3)
+            @if (auth()->user()->role != 2)
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
                     <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100">
                         <div class="flex items-center justify-between">

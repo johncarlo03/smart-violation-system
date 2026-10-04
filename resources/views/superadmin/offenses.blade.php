@@ -50,7 +50,7 @@
             <button onclick="document.getElementById('create-modal').close()"
                 class="text-gray-400 hover:text-gray-600">&times;</button>
         </div>
-        <form action="{{ route('superadmin.offenses.store') }}" method="POST" class="space-y-4">
+        <form id="create-offense-form" action="{{ route('superadmin.offenses.store') }}" method="POST" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-xs font-semibold uppercase text-gray-600 mb-1">Offense Name</label>
@@ -102,3 +102,43 @@
         </form>
     </dialog>
 </x-app-layout>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelectorAll('.delete-offense-form').forEach(form => {
+
+            form.addEventListener('submit', function (event) {
+
+                event.preventDefault();
+
+                const offenseName = this.dataset.name;
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to permanently delete "${offenseName}". This action cannot be undone!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel',
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-2xl',
+                        confirmButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider',
+                        cancelButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider'
+                    }
+                }).then((result) => {
+
+                    if (result.isConfirmed) {
+                        this.submit();
+                    }
+
+                });
+
+            });
+
+        });
+
+    });
+</script>

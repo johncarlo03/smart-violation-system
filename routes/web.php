@@ -8,10 +8,11 @@ use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\UsersCreationController;
 use App\Http\Controllers\Superadmin\OffensesCreationController;
+use App\Http\Controllers\Student\AppealController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Models\User;
+// use Illuminate\Http\Request;
+// use App\Models\User;
 
 Route::get('/', function () {
     return view('welcome');
@@ -68,6 +69,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth'])->group(function () {
+
+    Route::post(
+        '/student/violations/{violation}/appeal',
+        [AppealController::class, 'store']
+    )->name('student.violations.appeal');
+
+});
+
 Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
 // Route::get('/students/search', function (Request $request) {
 //     return User::where('role', 1)
@@ -76,19 +86,24 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 //         ->get(['id', 'name', 'rfid_number', 'id_number']);
 // });
 
-Route::post('/violations', [ViolationController::class, 'store'])->name('violations.store');
+Route::middleware(['auth', 'role:2,3'])->group(function () {
 
-Route::get('/violations/{violation}/manage', [ViolationController::class, 'manage'])
-    ->name('violations.manage');
+    Route::post('/violations', [ViolationController::class, 'store'])
+        ->name('violations.store');
 
-Route::put('/violations/{violation}/resolve', [ViolationController::class, 'resolve'])
-    ->name('violations.resolve');
+    Route::get('/violations/{violation}/manage', [ViolationController::class, 'manage'])
+        ->name('violations.manage');
 
-Route::put('/violations/{violation}/dismiss', [ViolationController::class, 'dismiss'])
-    ->name('violations.dismiss');
-Route::get('/violations/records', [ViolationController::class, 'index'])
-    ->middleware(['auth', 'role:2,3'])
-    ->name('violations.index');
+    Route::put('/violations/{violation}/resolve', [ViolationController::class, 'resolve'])
+        ->name('violations.resolve');
+
+    Route::put('/violations/{violation}/dismiss', [ViolationController::class, 'dismiss'])
+        ->name('violations.dismiss');
+
+    Route::get('/violations/records', [ViolationController::class, 'index'])
+        ->name('sao.violations.index');
+
+});
 
 Route::get('/departments/{department}/courses', function ($departmentId) {
 

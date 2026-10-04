@@ -4,7 +4,7 @@
     src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
 <x-app-layout>
-    
+
     <div id="studentInfoModal"
         class="fixed inset-0 z-[60] hidden bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
@@ -56,11 +56,13 @@
 
                     <div class="mt-4 space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <button type="button" onclick="showOffenses('Academic')"
-                                class="p-4 border rounded hover:bg-blue-50 text-left">
-                                <span class="font-bold block">Academic Violations</span>
-                                <span class="text-xs text-gray-500">e.g., Cheating, Plagiarism</span>
-                            </button>
+                            @if(auth()->user()->role != 2)
+                                <button type="button" onclick="showOffenses('Academic')"
+                                    class="p-4 border rounded hover:bg-blue-50 text-left">
+                                    <span class="font-bold block">Academic Violations</span>
+                                    <span class="text-xs text-gray-500">e.g., Cheating, Plagiarism</span>
+                                </button>
+                            @endif
                             <button type="button" onclick="showOffenses('Non-Academic')"
                                 class="p-4 border rounded hover:bg-green-50 text-left">
                                 <span class="font-bold block">Non-Academic Offenses</span>
@@ -132,7 +134,7 @@
 
                         <div class="mb-4">
                             <x-input-label for="description" value="Details" />
-                            <textarea name="description" id="description"
+                            <textarea name="description" id="description" required
                                 class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 rows="3"></textarea>
                         </div>

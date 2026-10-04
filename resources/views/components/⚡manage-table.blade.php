@@ -47,10 +47,31 @@ new class extends Component
             });
         })
         ->when($this->statusFilter !== '', function ($query) {
+    if ($this->statusFilter === 'appealed') {
+        $query->whereHas('appeals', function ($q) {
+            $q->where('status', 'pending');
+        });
+    } else {
         $query->where('status', $this->statusFilter);
-        })
-        ->orderByRaw("FIELD(status, 'pending', 'resolved', 'dismissed')")
-        ->paginate(10);
+    }
+})
+->orderByRaw("
+    CASE
+        WHEN status = 'pending' THEN 1
+        WHEN EXISTS (
+            SELECT 1
+            FROM appeals
+            WHERE appeals.violation_id = violations.id
+            AND appeals.status = 'pending'
+        ) THEN 2
+        WHEN status = 'resolved' THEN 3
+        WHEN status = 'dismissed' THEN 4
+        ELSE 5
+    END
+")
+->orderBy('created_at', 'desc')
+->orderBy('id', 'desc')
+->paginate(10);
     }
 };
 ?>
@@ -142,18 +163,39 @@ new class extends Component
 
                         
                         <td class="px-6 py-5 text-center">
-                            <span
-                                class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                {{
-                                    $v->status === 'pending'
-                                        ? 'bg-orange-100 text-orange-700 border-orange-200'
-                                        : ($v->status === 'resolved'
-                                            ? 'bg-green-100 text-green-700 border-green-200'
-                                            : 'bg-red-100 text-red-700 border-red-200')
-                                }}" >
-                                {{ $v->status }}
-                            </span>
+                            @php
+                                $pendingAppeal = $v->appeals
+                                    ->where('status', 'pending')
+                                    ->first();
+                            @endphp
 
+                            @if($pendingAppeal)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+                                            text-xs font-bold bg-orange-100 text-orange-700">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/>
+                                    </svg>
+                                    Appealed
+                                </span>
+                            @elseif($v->status === 'pending')
+                                <span class="px-3 py-1 rounded-full text-xs font-bold
+                                            bg-yellow-100 text-yellow-700">
+                                    Pending
+                                </span>
+
+                            @elseif($v->status === 'resolved')
+                                <span class="px-3 py-1 rounded-full text-xs font-bold
+                                            bg-blue-100 text-blue-700">
+                                    Resolved
+                                </span>
+
+                            @elseif($v->status === 'dismissed')
+                                <span class="px-3 py-1 rounded-full text-xs font-bold
+                                            bg-green-100 text-green-700">
+                                    Dismissed
+                                </span>
+                            @endif
                         </td>
 
                         <td class="px-6 py-5 text-right">
@@ -167,12 +209,29 @@ new class extends Component
                                         View Photo
                                     </button>
                                 @endif
-                                <a
-                                    href="{{ route('violations.manage', $v->id) }}"
-                                    class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-indigo-700"
-                                >
-                                    Manage
-                                </a>
+                                @if(auth()->user()->role == 2)
+
+    <span
+        class="inline-flex items-center px-4 py-2
+               bg-indigo-600 text-white text-xs font-bold
+               rounded-lg shadow-sm opacity-40
+               cursor-not-allowed"
+    >
+        Manage
+    </span>
+
+@else
+
+    <a
+        href="{{ route('violations.manage', $v->id) }}"
+        class="inline-flex items-center px-4 py-2
+               bg-indigo-600 text-white text-xs font-bold
+               rounded-lg shadow-sm hover:bg-indigo-700 transition"
+    >
+        Manage
+    </a>
+
+@endif
                             </div>
                         </td>
                     </tr>

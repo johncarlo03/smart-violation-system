@@ -17,7 +17,7 @@
                     </x-nav-link>
 
                     @if(in_array(Auth::user()->role, [2, 3]))
-                        <x-nav-link :href="route('violations.index')" :active="request()->routeIs('violations.index')">
+                        <x-nav-link :href="route('sao.violations.index')" :active="request()->routeIs('sao.violations.index')">
                             {{ __('Violation Records') }}
                         </x-nav-link>
                     @endif
@@ -78,7 +78,7 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
             @if(in_array(Auth::user()->role, [2, 3]))
-                <x-responsive-nav-link :href="route('violations.index')" :active="request()->routeIs('violations.index')">
+                <x-responsive-nav-link :href="route('sao.violations.index')" :active="request()->routeIs('sao.violations.index')">
                     {{ __('Violation Records') }}
                 </x-responsive-nav-link>
             @endif

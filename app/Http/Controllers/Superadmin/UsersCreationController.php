@@ -47,7 +47,7 @@ class UsersCreationController extends Controller
             'course_id' => 'required|string',
             'department_id' => 'required|string',
             'year_level' => 'required|string',
-            'rfid_number' => 'required|string|unique:users,rfid_number',
+            'rfid_number' => 'nullable|string|unique:users,rfid_number',
             'role' => 'required|string',
             'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
@@ -81,22 +81,55 @@ class UsersCreationController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->id_number = $request->id_number;
-        $user->password = $request->password;
-        $user->rfid_number = $request->rfid_number;
-        $user->role = $request->role;
+    $validated = $request->validate([
+        'name' => 'required|string',
+        'email' => [
+            'required',
+            'string',
+            Rule::unique('users', 'email')->ignore($user->id),
+        ],
+        'id_number' => [
+            'required',
+            'string',
+            Rule::unique('users', 'id_number')->ignore($user->id),
+        ],
+        'rfid_number' => [
+            'string',
+            Rule::unique('users', 'rfid_number')->ignore($user->id),
+        ],
+        'role' => 'required|string',
 
-        $user->save();
+        'department_id' => 'nullable|exists:departments,id',
+        'course_id' => 'nullable|exists:courses,id',
+        'year_level' => 'nullable|string',
 
-        return redirect()->route('superadmin.users')
-            ->with('success', 'User updated successfully');
+        'password' => 'nullable|confirmed|min:8',
+    ]);
+
+    $user->name = $validated['name'];
+    $user->email = $validated['email'];
+    $user->id_number = $validated['id_number'];
+    $user->rfid_number = $validated['rfid_number'];
+    $user->role = $validated['role'];
+
+    $user->department_id = $validated['department_id'] ?? null;
+    $user->course_id = $validated['course_id'] ?? null;
+    $user->year_level = $validated['year_level'] ?? null;
+
+    if (!empty($validated['password'])) {
+        $user->password = Hash::make($validated['password']);
     }
+
+    $user->save();
+
+    return redirect()
+        ->back()
+        ->with('success', 'User updated successfully');
+}
 
     /**
      * Remove the specified resource from storage.

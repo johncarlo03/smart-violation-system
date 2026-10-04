@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\OffensePenalty;
+use App\Models\Appeal;
 
 class Violation extends Model
 {
@@ -49,5 +50,10 @@ class Violation extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function appeals()
+    {
+        return $this->hasMany(Appeal::class);
     }
 }

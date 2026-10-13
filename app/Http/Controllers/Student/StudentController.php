@@ -9,50 +9,51 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-public function index()
-{
-    $studentId = Auth::id();
+    public function index()
+    {
+        $studentId = Auth::id();
 
-    // Get violations in chronological order first
-    $studentViolations = Violation::with(['offense', 'penalty', 'appeals'])
-        ->where('student_id', $studentId)
-        ->where('status', '!=', 'void')
-        ->orderBy('created_at', 'asc')
-        ->get();
+        $all = Violation::with(['offense', 'penalty', 'appeals'])
+            ->where('student_id', $studentId)
+            ->where('status', '!=', 'void')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-    // Calculate offense number based on chronological history
-    $offenseCounts = [];
+        // Offense number: only resolved violations count toward the history
+        $resolvedCounts = [];
 
-    foreach ($studentViolations as $violation) {
-        $offenseId = $violation->offense_id;
+        foreach ($all as $violation) {
+            if ($violation->status === 'dismissed') {
+                $violation->offense_number = null;
+                continue;
+            }
 
-        if (!isset($offenseCounts[$offenseId])) {
-            $offenseCounts[$offenseId] = 0;
+            $id = $violation->offense_id;
+            $resolvedCounts[$id] ??= 0;
+
+            if ($violation->status === 'resolved') {
+                $resolvedCounts[$id]++;
+                $violation->offense_number = $resolvedCounts[$id];
+            } else { // pending: it would be the next one
+                $violation->offense_number = $resolvedCounts[$id] + 1;
+            }
         }
 
-        $offenseCounts[$offenseId]++;
+        $pendingViolations = $all->where('status', 'pending')->sortByDesc('created_at')->values();
+        $resolvedViolations = $all->where('status', 'resolved')->sortByDesc('created_at')->values();
+        $dismissedViolations = $all->where('status', 'dismissed')->sortByDesc('created_at')->values();
 
-        $violation->offense_number = $offenseCounts[$offenseId];
+        $totalViolationsCount = $all->count();
+        $pendingViolationsCount = $pendingViolations->count();
+
+        return view('student.dashboard', compact(
+            'pendingViolations',
+            'resolvedViolations',
+            'dismissedViolations',
+            'totalViolationsCount',
+            'pendingViolationsCount'
+        ));
     }
-
-    $studentViolations = $studentViolations
-        ->sortBy(function ($violation) {
-            return $violation->status === 'pending' ? 0 : 1;
-        })
-        ->values();
-
-    $totalViolationsCount = $studentViolations->count();
-
-    $pendingViolationsCount = $studentViolations
-        ->where('status', 'pending')
-        ->count();
-
-    return view('student.dashboard', compact(
-        'studentViolations',
-        'totalViolationsCount',
-        'pendingViolationsCount'
-    ));
-}
     public function search(Request $request)
     {
         $q = $request->query('q');
@@ -66,7 +67,7 @@ public function index()
             // This is what powers your "Repeat Offender" card
             ->withCount([
                 'violations' => function ($query) {
-                    $query->where('status', '!=', 'void');
+                    $query->where('status', '!=', 'dismissed');
                 }
             ])
             ->limit(10)

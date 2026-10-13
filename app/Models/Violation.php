@@ -21,6 +21,9 @@ class Violation extends Model
         'resolved_at',
     ];
 
+    protected $casts = [
+        'resolved_at' => 'datetime',
+    ];
     public function incidents()
     {
         return $this->belongsTo(Offense::class);

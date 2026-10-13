@@ -6,6 +6,7 @@ use App\Events\ViolationUpdated;
 use App\Http\Controllers\Controller;
 use App\Models\Violation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Number;
 
 class ViolationController extends Controller
 {
@@ -26,10 +27,10 @@ class ViolationController extends Controller
         $majorIncidents = Violation::whereHas('offense', function ($query) {
             $query->whereIn('category', ['Serious', 'Very Serious']);
         })
-        ->when($user->role != 3, function ($query) {
-            return $query->whereDate('created_at', today());
-        })
-        ->count();
+            ->when($user->role != 3, function ($query) {
+                return $query->whereDate('created_at', today());
+            })
+            ->count();
 
         $violations = Violation::with([
             'student',
@@ -39,11 +40,11 @@ class ViolationController extends Controller
             'penalty',
             'appeals'
         ])
-        ->latest()
-        ->when($user->role != 3, function ($query) {
-            return $query->whereDate('created_at', today());
-        })
-        ->paginate(10);
+            ->latest()
+            ->when($user->role != 3, function ($query) {
+                return $query->whereDate('created_at', today());
+            })
+            ->paginate(10);
 
         return view('sao.violations', compact(
             'totalViolations',
@@ -75,16 +76,16 @@ class ViolationController extends Controller
         }
 
         $previousViolations = Violation::where('student_id', $student->id)
-        ->where('offense_id', $offense->id)
-        ->whereIn('status', ['pending', 'resolved'])
-        ->count();
+            ->where('offense_id', $offense->id)
+            ->whereIn('status', ['pending', 'resolved'])
+            ->count();
 
         $offenseNumber = $previousViolations + 1;
         $penaltyLevel = min($offenseNumber, 3);
 
         $penalty = $offense->penalties()
-        ->where('level', $penaltyLevel)
-        ->first();
+            ->where('level', $penaltyLevel)
+            ->first();
 
         Violation::create([
             'student_id' => $student->id,
@@ -120,7 +121,7 @@ class ViolationController extends Controller
         $previousViolations = Violation::where('student_id', $violation->student_id)
             ->where('offense_id', $violation->offense_id)
             ->where('id', '!=', $violation->id)
-            ->whereIn('status', ['pending', 'resolved'])
+            ->where('status', 'resolved')
             ->count();
 
         $offenseNumber = $previousViolations + 1;
@@ -156,10 +157,6 @@ class ViolationController extends Controller
             ],
         ]);
 
-        $latestAppeal = $violation->appeals
-            ->sortByDesc('created_at')
-            ->first();
-        
         $previousViolations = Violation::where('student_id', $violation->student_id)
             ->where('offense_id', $violation->offense_id)
             ->where('id', '!=', $violation->id)
@@ -182,7 +179,7 @@ class ViolationController extends Controller
                     'penalty' => "No penalty has been configured for {$penaltyLevel} offense."
                 ]);
         } // can be removed
-        
+
         $violation->update([
             'status' => 'resolved',
             'penalty_id' => $penalty->id,
@@ -198,14 +195,13 @@ class ViolationController extends Controller
                 'reviewed_by' => auth()->id(),
                 'reviewed_at' => now(),
             ]);
-        
+
         ViolationUpdated::dispatch();
-        return redirect()
-            ->route('sao.violations.index')
-            ->with(
-                'success',
-                "Violation resolved successfully as {$offenseNumber} offense."
-            );
+
+        return back()->with(
+            'success',
+            'Violation resolved successfully as ' . Number::ordinal($offenseNumber) . ' offense.'
+        );
     }
 
 
@@ -227,6 +223,7 @@ class ViolationController extends Controller
 
         $violation->update([
             'status' => 'dismissed',
+            'penalty_id' => null,
             'resolution_notes' => $validated['dismissal_reason'],
             'resolved_at' => now(),
         ]);
@@ -239,13 +236,9 @@ class ViolationController extends Controller
                 'reviewed_by' => auth()->id(),
                 'reviewed_at' => now(),
             ]);
-        
+
         ViolationUpdated::dispatch();
-        return redirect()
-            ->route('sao.violations.index')
-            ->with(
-                'success',
-                'Violation has been dismissed.'
-            );
+
+        return back()->with('success', 'Violation has been dismissed.');
     }
 }

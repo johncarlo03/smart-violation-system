@@ -98,9 +98,17 @@
     </div>
 
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ Auth::user()->name }}'s Dashboard
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ Auth::user()->name }}'s Dashboard
+            </h2>
+            @if(auth()->user()->role != 2)
+            <a href="{{ url()->previous(route('dashboard')) }}"
+                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200">
+                Back
+            </a>
+            @endif
+        </div>
     </x-slot>
 
     <div class="py-12">
@@ -141,8 +149,8 @@
 
                         <div class="mb-4">
                             <x-input-label for="evidence_image" value="Upload Evidence Photo (Optional)" />
-                            <input type="file" name="evidence_image" id="evidence_image"
-                                onchange="handleImageUpload(event)" class="block mt-1 w-full text-sm text-gray-500
+                            <input type="file" onchange="handleImageUpload(event)" name="evidence_image"
+                                id="evidence_image" class="block mt-1 w-full text-sm text-gray-500
                                     file:mr-4 file:py-2 file:px-4
                                     file:rounded-full file:border-0
                                     file:text-sm file:font-semibold
@@ -219,36 +227,57 @@
 
         function showOffenses(category) {
             const list = document.getElementById('offenseList');
-            const select = document.getElementById('specificOffense');
+            // const select = document.getElementById('specificOffense');
             const title = document.getElementById('categoryTitle');
 
             list.classList.remove('hidden');
             title.innerText = category;
 
-            select.innerHTML = '';
+            // select.innerHTML = '';
+            offenseSelect.clear();
+            offenseSelect.clearOptions();
 
             const categoryOffenses = offensesByGroup[category] || [];
 
+            // categoryOffenses.forEach(offense => {
+            //     let opt = document.createElement('option');
+
+            //     opt.value = offense.id;
+            //     opt.innerText = offense.name;
+
+
+            //     opt.setAttribute('data-name', offense.name);
+
+            //     select.appendChild(opt);
+            // });
+
             categoryOffenses.forEach(offense => {
-                let opt = document.createElement('option');
-
-                opt.value = offense.id;
-                opt.innerText = offense.name;
-
-
-                opt.setAttribute('data-name', offense.name);
-
-                select.appendChild(opt);
+                offenseSelect.addOption({
+                    value: offense.id,
+                    text: offense.name
+                });
             });
+
+            offenseSelect.refreshOptions(false);
+
+            // Open the searchable dropdown automatically
+            offenseSelect.open();
         }
 
         function confirmViolation() {
-            const select = document.getElementById('specificOffense');
-            const selectedId = select.value;
-            const selectedName = select.options[select.selectedIndex].getAttribute('data-name');
+            const selectedId = offenseSelect.getValue();
+
+            if (!selectedId) {
+                alert('Please select an offense.');
+                return;
+            }
+
+            const selectedOption = offenseSelect.options[selectedId];
+            const selectedName = selectedOption.text;
             const category = document.getElementById('categoryTitle').innerText;
 
-            document.getElementById('type_display').value = `${category}: ${selectedName}`;
+            document.getElementById('type_display').value =
+                `${category}: ${selectedName}`;
 
             document.getElementById('type_hidden').value = selectedId;
 
@@ -258,6 +287,12 @@
         function closeInfoModal() {
             document.getElementById('studentInfoModal').classList.add('hidden');
         }
+        const offenseSelect = new TomSelect("#specificOffense", {
+            searchField: ["text"],
+            maxOptions: 10,
+            placeholder: "Search offense...",
+            allowEmptyOption: true,
+        });
 
         new TomSelect("#student_id", {
             valueField: "id",

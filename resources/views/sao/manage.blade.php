@@ -18,6 +18,27 @@
             </a>
         </div>
     </x-slot>
+    @php
+        $appealPending = $latestAppeal && $latestAppeal->status === 'pending';
+    @endphp
+
+    @if (session('success'))
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm font-semibold text-green-800">
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+    
+    @if ($errors->any())
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                @foreach ($errors->all() as $error)
+                    <p>{{ $error }}</p>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,17 +115,6 @@
                         </p>
                     </div>
 
-
-                    <div>
-                        <p class="text-xs font-bold uppercase text-gray-400">
-                            Reported By
-                        </p>
-
-                        <p class="font-semibold text-gray-800 mt-1">
-                            {{ $violation->cso->name ?? 'N/A' }}
-                        </p>
-                    </div>
-
                 </div>
 
             </div>
@@ -139,7 +149,29 @@
                             {{ $violation->offense->category ?? 'N/A' }}
                         </p>
                     </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase text-gray-400">Date Reported</p>
+                        <p class="font-semibold text-gray-800 mt-1">
+                            {{ $violation->created_at->format('F d, Y h:i A') }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold uppercase text-gray-400">Reported By</p>
+                        <p class="font-semibold text-gray-800 mt-1">
+                            {{ $violation->cso->name ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-xs font-bold uppercase text-gray-400 mb-2">
+                            Reporter's Description
+                        </p>
 
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                            <p class="text-sm text-gray-700">
+                                {{ $violation->description ?: 'No description provided.' }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -187,7 +219,7 @@
                             </div>
 
                             <span class="px-3 py-1.5 rounded-full text-xs font-black uppercase
-                                                                    {{ $appeal->status === 'pending'
+                                                                                                                                                            {{ $appeal->status === 'pending'
                     ? 'bg-orange-100 text-orange-700'
                     : ($appeal->status === 'approved'
                         ? 'bg-green-100 text-green-700'
@@ -272,16 +304,7 @@
                             Offense Level
                         </p>
                         <p class="text-xl font-black text-indigo-900 mt-1">
-                            @if($offenseNumber == 1)
-                                1st
-                            @elseif($offenseNumber == 2)
-                                2nd
-                            @elseif($offenseNumber == 3)
-                                3rd
-                            @else
-                                {{ $offenseNumber }}th
-                            @endif
-                            Offense
+                        {{ \Illuminate\Support\Number::ordinal($offenseNumber) }} Offense
                         </p>
 
                         @if($recommendedPenalty)
@@ -303,142 +326,254 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">
-                        Resolve Violation
-                    </h3>
-                    <p class="text-sm text-gray-500 mb-5">
-                        The recommended penalty above will automatically be applied when
-                        this violation is resolved.
-                    </p>
-                    @if($recommendedPenalty)
+                {{-- ACTION SELECTION --}}
+                @if($violation->status === 'pending')
 
-                        <form action="{{ route('violations.resolve', $violation) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="mb-5">
-                                <label for="resolution_notes" class="block text-sm font-semibold text-gray-700 mb-2">
-                                    Resolution Notes
-                                </label>
-                                <textarea id="resolution_notes" name="resolution_notes" rows="3" required
-                                    class="w-full rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500"
-                                    placeholder="Enter notes regarding the action taken...">{{ old('resolution_notes') }}</textarea>
-                            </div>
+                    <div x-data="{ action: '' }" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
-                            @if($latestAppeal && $latestAppeal->status === 'pending')
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">
+                            Take Action
+                        </h3>
 
-                                <x-primary-button type="submit"
-                                    onclick="return confirm('Are you sure you want to apply the recommended penalty and resolve this violation?')">
-                                    Deny Penalty & Resolve
-                                </x-primary-button>
+                        <p class="text-sm text-gray-500 mb-5">
+                            Choose how you want to process this violation.
+                        </p>
+
+                        {{-- ACTION CHOICES --}}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            {{-- RESOLVE --}}
+                            <button type="button" @click="action = 'resolve'"
+                                :class="action === 'resolve'
+                                                                                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
+                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                class="p-5 border rounded-xl text-left transition">
+                                <div class="flex items-center gap-3">
+
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+
+                                    <div>
+
+                                        @if($latestAppeal && $latestAppeal->status === 'pending')
+                                            <p class="font-bold text-gray-800">
+                                                Reject Appeal
+                                            </p>
+                                        @else
+                                            <p class="font-bold text-gray-800">
+                                                Resolve Violation
+                                            </p>
+                                        @endif
+
+                                        @if($latestAppeal && $latestAppeal->status === 'pending')
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                The appeal is not valid. Apply the penalty and resolve the violation.
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Apply the recommended penalty and resolve the violation.
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </button>
+
+
+                            {{-- DISMISS --}}
+                            <button type="button" @click="action = 'dismiss'"
+                                :class="action === 'dismiss'
+                                                                                                            ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
+                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                class="p-5 border rounded-xl text-left transition">
+                                <div class="flex items-center gap-3">
+
+                                    <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </div>
+
+                                    <div>
+                                        @if($latestAppeal && $latestAppeal->status === 'pending')
+                                            <p class="font-bold text-gray-800">
+                                                Accept Appeal
+                                            </p>
+                                        @else
+                                            <p class="font-bold text-gray-800">
+                                                Dismiss Violation
+                                            </p>
+                                        @endif
+
+                                        @if($latestAppeal && $latestAppeal->status === 'pending')
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                The appeal is valid. Dismiss the violation.
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Dismiss this violation because it is invalid.
+                                            </p>
+                                        @endif
+                                    </div>
+
+                                </div>
+                            </button>
+
+                        </div>
+
+
+                        {{-- ==================== RESOLVE FORM ==================== --}}
+                        <div x-show="action === 'resolve'" x-transition x-cloak class="mt-6">
+
+                            @if($recommendedPenalty)
+
+                                    <div class="p-4 mb-5 bg-indigo-50 border border-indigo-100 rounded-xl">
+
+                                        <p class="text-xs font-bold uppercase tracking-wider text-indigo-500">
+                                            Recommended Penalty
+                                        </p>
+
+                                        <p class="text-sm font-semibold text-indigo-900 mt-1">
+                                            {{ $recommendedPenalty->penalty_description }}
+                                        </p>
+
+                                    </div>
+
+                                    <form action="{{ route('violations.resolve', $violation) }}" method="POST" class="js-confirm-form"
+                                        data-title="{{ $appealPending ? 'Reject this appeal?' : 'Resolve this violation?' }}" data-text="{{ $appealPending
+                                ? 'The appeal will be denied and the recommended penalty will be applied to ' . $violation->student->name . '.'
+                                : 'The recommended penalty will be applied to ' . $violation->student->name . '.' }}"
+                                        data-confirm="{{ $appealPending ? 'Yes, reject appeal' : 'Yes, resolve' }}"
+                                        data-color="#15803d">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <div class="mb-5">
+
+                                            <label for="resolution_notes" class="block text-sm font-semibold text-gray-700 mb-2">
+                                                Resolution Notes
+                                            </label>
+
+                                            <textarea id="resolution_notes" name="resolution_notes" rows="4" required
+                                                class="w-full rounded-xl border-gray-300 focus:border-green-500 focus:ring-green-500"
+                                                placeholder="Enter notes regarding the action taken...">{{ old('resolution_notes') }}</textarea>
+
+                                        </div>
+
+                                        <x-primary-button type="submit">
+                                            @if($latestAppeal && $latestAppeal->status === 'pending')
+                                                Accept Appeal & Dismiss
+                                            @else
+                                                Apply Penalty & Resolve
+                                            @endif
+                                        </x-primary-button>
+
+                                    </form>
+
                             @else
-                                <x-primary-button type="submit"
-                                    onclick="return confirm('Are you sure you want to resolve this violation?')">
-                                    Apply Penalty & Resolve
-                                </x-primary-button>
+
+                                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+
+                                    <p class="text-sm font-semibold text-yellow-800">
+                                        This violation cannot be resolved because no penalty
+                                        has been configured for the current offense level.
+                                    </p>
+
+                                </div>
+
                             @endif
-                        </form>
 
-                    @else
-                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                            <p class="text-sm font-semibold text-yellow-800">
-                                This violation cannot be resolved because no penalty
-                                has been configured for the current offense level.
-                            </p>
-                        </div>
-                    @endif
-                </div>
-
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">
-                        Dismiss Violation
-                    </h3>
-
-                    <p class="text-sm text-gray-500 mb-5">
-                        Dismiss the violation if it is invalid, incorrect, or cannot be
-                        sufficiently verified.
-                    </p>
-
-
-                    <form action="{{ route('violations.dismiss', $violation) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <div class="mb-5">
-                            <label for="dismissal_reason" class="block text-sm font-semibold text-gray-700 mb-2">
-                                Dismissal Reason
-                            </label>
-
-                            <textarea id="dismissal_reason" name="dismissal_reason" rows="3" required
-                                class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-red-500"
-                                placeholder="Explain why this violation is being dismissed...">{{ old('dismissal_reason') }}</textarea>
                         </div>
 
-                        @if(!$latestAppeal)
-                            <x-danger-button type="submit" onclick="return confirm('Are you sure you want to dismiss this violation?')">
-                                Dismiss Violation
-                            </x-danger-button>
-                        @endif
-                        @if($latestAppeal && $latestAppeal->status === 'pending')
-                            <x-danger-button type="submit"
-                                onclick="return confirm('Are you sure you want to accept this appeal and dismiss the violation?')">
-                                Accept Appeal & Dismiss
-                            </x-danger-button>
-                        @endif
-                    </form>
 
-                </div>
+                        {{-- ==================== DISMISS FORM ==================== --}}
+                        <div x-show="action === 'dismiss'" x-transition x-cloak class="mt-6">
+
+                            <form action="{{ route('violations.dismiss', $violation) }}" method="POST" class="js-confirm-form"
+                                data-title="{{ $appealPending ? 'Accept this appeal?' : 'Dismiss this violation?' }}" data-text="{{ $appealPending
+                    ? 'The appeal will be approved and the violation dismissed. No penalty will apply.'
+                    : 'The violation will be dismissed and no penalty will apply.' }}"
+                                data-confirm="{{ $appealPending ? 'Yes, accept appeal' : 'Yes, dismiss' }}"
+                                data-color="#dc2626">
+                                @csrf
+                                @method('PUT')
+
+                                <div class="mb-5">
+
+                                    <label for="dismissal_reason" class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Dismissal Reason
+                                    </label>
+
+                                    <textarea id="dismissal_reason" name="dismissal_reason" rows="4" required
+                                        class="w-full rounded-xl border-gray-300 focus:border-red-500 focus:ring-red-500"
+                                        placeholder="Explain why this violation is being dismissed...">{{ old('dismissal_reason') }}</textarea>
+
+                                </div>
+
+                                <x-danger-button type="submit">
+                                    @if($appealPending)
+                                        Accept Appeal & Dismiss
+                                    @else
+                                        Dismiss Violation
+                                    @endif
+                                </x-danger-button>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                @endif
 
             @else
-                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-5">
-                        Processing Information
-                    </h3>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-5">
+                    <h3 class="text-lg font-bold text-gray-800">Processing Information</h3>
 
                     @if($violation->status === 'resolved')
-
-                        <div class="mb-5">
-                            <p class="text-xs font-bold uppercase text-gray-400">
-                                Applied Penalty
-                            </p>
-
+                        <div>
+                            <p class="text-xs font-bold uppercase text-gray-400">Applied Penalty</p>
                             @if($violation->penalty)
-                                <p class="font-bold text-gray-800 mt-1">
-                                    {{ $violation->penalty->level }} Offense
-                                </p>
-
-                                <p class="text-sm text-gray-600 mt-1">
-                                    {{ $violation->penalty->penalty_description }}
-                                </p>
+                                <p class="font-bold text-gray-800 mt-1"> {{ \Illuminate\Support\Number::ordinal($violation->penalty->level) }} Offense</p>
+                                <p class="text-sm text-gray-600 mt-1">{{ $violation->penalty->penalty_description }}</p>
                             @else
-                                <p class="text-gray-500 mt-1">
-                                    No penalty recorded.
-                                </p>
+                                <p class="text-gray-500 mt-1">No penalty recorded.</p>
                             @endif
                         </div>
+                    @endif
 
-                        @if($violation->resolution_notes)
-                            <div>
-                                <p class="text-xs font-bold uppercase text-gray-400">
-                                    Resolution Notes
-                                </p>
+                    @if($violation->resolution_notes)
+                        <div>
+                            <p class="text-xs font-bold uppercase text-gray-400">
+                                {{ $violation->status === 'dismissed' ? 'Dismissal Reason' : 'Resolution Notes' }}
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1 whitespace-pre-line">{{ $violation->resolution_notes }}</p>
+                        </div>
+                    @endif
 
-                                <p class="text-sm text-gray-600 mt-1">
-                                    {{ $violation->resolution_notes }}
-                                </p>
-                            </div>
-                        @endif
-                    @elseif($violation->status === 'dismissed')
-                        @if($violation->resolution_notes)
-                            <div>
-                                <p class="text-xs font-bold uppercase text-gray-400">
-                                    Dismissal Reason
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    {{ $violation->resolution_notes }}
-                                </p>
-                            </div>
-                        @endif
+                    @if($violation->resolved_at)
+                        <div>
+                            <p class="text-xs font-bold uppercase text-gray-400">Date Processed</p>
+                            <p class="text-sm text-gray-600 mt-1">{{ $violation->resolved_at->format('F d, Y h:i A') }}</p>
+                        </div>
+                    @endif
+
+                    @if($latestAppeal)
+                        <div>
+                            <p class="text-xs font-bold uppercase text-gray-400">Student Appeal</p>
+                            <p class="text-sm text-gray-700 mt-1 whitespace-pre-line">{{ $latestAppeal->reason }}</p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Status: <span class="font-semibold">{{ ucfirst($latestAppeal->status) }}</span>
+                                @if($latestAppeal->sao_response)
+                                    <br>SAO response: {{ $latestAppeal->sao_response }}
+                                @endif
+                            </p>
+                        </div>
                     @endif
                 </div>
             @endif
@@ -446,3 +581,29 @@
     </div>
 
 </x-app-layout>
+
+<script>
+    document.querySelectorAll('.js-confirm-form').forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            Swal.fire({
+                title: form.dataset.title,
+                text: form.dataset.text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: form.dataset.confirm,
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: form.dataset.color,
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+                customClass: { popup: 'rounded-2xl' },
+            }).then(result => {
+                if (result.isConfirmed) {
+                    form.querySelectorAll('button[type="submit"]').forEach(b => b.disabled = true);
+                    form.submit();
+                }
+            });
+        });
+    });
+</script>

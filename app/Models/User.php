@@ -39,6 +39,12 @@ class User extends Authenticatable
         return $this->belongsTo(Department::class, 'department_id');
     }
 
+    public function getProfilePhotoUrlAttribute(): string
+    {
+        return $this->profile_photo
+            ? asset('storage/' . $this->profile_photo)
+            : asset('images/default-avatar.png');
+    }
     public function course()
     {
         return $this->belongsTo(Course::class);

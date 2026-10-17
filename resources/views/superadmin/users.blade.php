@@ -178,7 +178,7 @@ nav[role="navigation"] span.text-gray-400 {
                         {{-- Structural Role Assignment Radio Nodes --}}
                         <div>
                             <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-3">
-                                Lorem Ipsum
+                                User Roles
                             </label>
 
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -279,13 +279,13 @@ nav[role="navigation"] span.text-gray-400 {
                                             Year Level
                                         </label>
                                         <select id="year_level" name="year_level" class="w-full rounded-xl border-gray-200">
-    <option value="">Select Year</option>
-    @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
-        <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
-            {{ $label }}
-        </option>
-    @endforeach
-</select>
+                                            <option value="">Select Year</option>
+                                            @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
+                                                <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                 </div>
                             </div>

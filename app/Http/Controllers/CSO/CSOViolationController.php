@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CSOViolationController extends Controller
@@ -34,7 +35,7 @@ class CSOViolationController extends Controller
         ]);
 
         // 1. Get the Student to find their Department ID
-        $student = \App\Models\User::findOrFail($request->student_id);
+        $student = User::findOrFail($request->student_id);
 
         // 2. Handle the Image Upload
         $imagePath = null;

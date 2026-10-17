@@ -103,10 +103,10 @@
                 {{ Auth::user()->name }}'s Dashboard
             </h2>
             @if(auth()->user()->role != 2)
-            <a href="{{ url()->previous(route('dashboard')) }}"
-                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200">
-                Back
-            </a>
+                <a href="{{ url()->previous(route('dashboard')) }}"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200">
+                    Back
+                </a>
             @endif
         </div>
     </x-slot>
@@ -166,6 +166,7 @@
                             @if (session('status'))
                                 <p class="text-sm text-green-600">{{ session('status') }}</p>
                             @endif
+                            <x-input-error :messages="$errors->get('offense_id')" class="mt-2" />
                         </div>
                     </form>
                 </div>
@@ -334,8 +335,7 @@
                 document.getElementById('modal_student_year').innerText = data.year_level || '';
                 // Handle Profile Photo: Check if photo exists in data, otherwise use default
                 // Assumes your profile photo is stored in the 'public' disk
-                const photoPath = data.profile_photo ? `/storage/${data.profile_photo}` : '/images/default-avatar.png';
-                document.getElementById('modal_student_photo').src = photoPath;
+                document.getElementById('modal_student_photo').src = data.profile_photo_url;
 
                 // Show the Modal (remove 'hidden' class)
                 document.getElementById('studentInfoModal').classList.remove('hidden');

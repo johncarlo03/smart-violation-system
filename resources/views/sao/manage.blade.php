@@ -29,7 +29,7 @@
             </div>
         </div>
     @endif
-    
+
     @if ($errors->any())
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
             <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -219,7 +219,7 @@
                             </div>
 
                             <span class="px-3 py-1.5 rounded-full text-xs font-black uppercase
-                                                                                                                                                            {{ $appeal->status === 'pending'
+                                                                                                                                                                                                            {{ $appeal->status === 'pending'
                     ? 'bg-orange-100 text-orange-700'
                     : ($appeal->status === 'approved'
                         ? 'bg-green-100 text-green-700'
@@ -304,7 +304,7 @@
                             Offense Level
                         </p>
                         <p class="text-xl font-black text-indigo-900 mt-1">
-                        {{ \Illuminate\Support\Number::ordinal($offenseNumber) }} Offense
+                            {{ \Illuminate\Support\Number::ordinal($offenseNumber) }} Offense
                         </p>
 
                         @if($recommendedPenalty)
@@ -345,19 +345,27 @@
                             {{-- RESOLVE --}}
                             <button type="button" @click="action = 'resolve'"
                                 :class="action === 'resolve'
-                                                                                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
-                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                                                                                                                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
+                                                                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
                                 class="p-5 border rounded-xl text-left transition">
                                 <div class="flex items-center gap-3">
 
-                                    <div
-                                        class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-
+                                    @if($latestAppeal && $latestAppeal->status === 'pending')
+                                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    @else
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    @endif
                                     <div>
 
                                         @if($latestAppeal && $latestAppeal->status === 'pending')
@@ -387,17 +395,26 @@
                             {{-- DISMISS --}}
                             <button type="button" @click="action = 'dismiss'"
                                 :class="action === 'dismiss'
-                                                                                                            ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
-                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                                                                                                                                            ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
+                                                                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
                                 class="p-5 border rounded-xl text-left transition">
                                 <div class="flex items-center gap-3">
 
-                                    <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </div>
+                                    @if($latestAppeal && $latestAppeal->status === 'pending')
+                                        <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </div>
+                                    @else
+                                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </div>
+                                    @endif
 
                                     <div>
                                         @if($latestAppeal && $latestAppeal->status === 'pending')
@@ -467,7 +484,7 @@
 
                                         <x-primary-button type="submit">
                                             @if($latestAppeal && $latestAppeal->status === 'pending')
-                                                Accept Appeal & Dismiss
+                                                Reject Appeal & Resolve
                                             @else
                                                 Apply Penalty & Resolve
                                             @endif
@@ -539,7 +556,9 @@
                         <div>
                             <p class="text-xs font-bold uppercase text-gray-400">Applied Penalty</p>
                             @if($violation->penalty)
-                                <p class="font-bold text-gray-800 mt-1"> {{ \Illuminate\Support\Number::ordinal($violation->penalty->level) }} Offense</p>
+                                <p class="font-bold text-gray-800 mt-1">
+                                    {{ \Illuminate\Support\Number::ordinal($violation->penalty->level) }} Offense
+                                </p>
                                 <p class="text-sm text-gray-600 mt-1">{{ $violation->penalty->penalty_description }}</p>
                             @else
                                 <p class="text-gray-500 mt-1">No penalty recorded.</p>

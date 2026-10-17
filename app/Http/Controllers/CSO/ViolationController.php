@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Violation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Number;
+use App\Models\User;
+use \App\Models\Offense;
 
 class ViolationController extends Controller
 {
@@ -64,9 +66,23 @@ class ViolationController extends Controller
             'evidence_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        $student = \App\Models\User::findOrFail($request->student_id);
-        $offense = \App\Models\Offense::findOrFail($request->offense_id);
+        $student = User::findOrFail($request->student_id);
+        $offense = Offense::findOrFail($request->offense_id);
 
+        $alreadyReported = Violation::where('student_id', $student->id)
+            ->where('offense_id', $request->offense_id)
+            ->whereDate('created_at', today())
+            ->whereIn('status', ['pending', 'resolved'])
+            ->exists();
+
+        if ($alreadyReported) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'offense_id' => "{$student->name} has already been reported for this offense today.",
+                ]);
+        }
+        
         $imagePath = null;
 
         if ($request->hasFile('evidence_image')) {
@@ -92,7 +108,7 @@ class ViolationController extends Controller
             'cso_id' => auth()->id(),
             'department_id' => $student->department_id,
             'offense_id' => $request->offense_id,
-            'penalty_id' => $penalty?->id,
+            // 'penalty_id' => $penalty?->id,
             'description' => $request->description,
             'evidence_image' => $imagePath,
             'status' => 'pending',
@@ -160,7 +176,7 @@ class ViolationController extends Controller
         $previousViolations = Violation::where('student_id', $violation->student_id)
             ->where('offense_id', $violation->offense_id)
             ->where('id', '!=', $violation->id)
-            ->whereIn('status', ['pending', 'resolved'])
+            ->where('status', 'resolved')
             ->count();
 
         $offenseNumber = $previousViolations + 1;

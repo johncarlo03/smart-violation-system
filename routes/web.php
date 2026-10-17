@@ -87,10 +87,11 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 // });
 
 Route::middleware(['auth', 'role:2,3'])->group(function () {
-
     Route::post('/violations', [ViolationController::class, 'store'])
         ->name('violations.store');
+});
 
+Route::middleware(['auth', 'role:3'])->group(function () {
     Route::get('/violations/{violation}/manage', [ViolationController::class, 'manage'])
         ->name('violations.manage');
 

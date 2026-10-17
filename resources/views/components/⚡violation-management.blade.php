@@ -71,7 +71,7 @@ new class extends Component {
     {
         return Violation::with(['student', 'cso', 'department', 'offense'])
             ->latest()
-            ->take(10)
+            ->take(5)
             ->get();
     }
 };

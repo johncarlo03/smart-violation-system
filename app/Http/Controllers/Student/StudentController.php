@@ -36,6 +36,8 @@ class StudentController extends Controller
                 $violation->offense_number = $resolvedCounts[$id];
             } else { // pending: it would be the next one
                 $violation->offense_number = $resolvedCounts[$id] + 1;
+                $violation->recommended_penalty = $violation->offense?->penalties
+                ->firstWhere('level', min($violation->offense_number, 3));
             }
         }
 
@@ -81,6 +83,7 @@ class StudentController extends Controller
                     'rfid' => $student->rfid_number,
                     'year_level' => $student->year_level,
                     'department_id' => $student->department_id,
+                    'profile_photo_url' => $student->profile_photo_url,
                     'violation_count' => $student->violations_count, // Sent to JS
                     'dept_name' => $student->department->acronym ?? 'N/A',
                     'badge_color' => $student->department->badge_color ?? 'bg-gray-100 text-gray-700 border-gray-200',

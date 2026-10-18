@@ -10,11 +10,10 @@ return new class extends Migration
     {
         Schema::table('violations', function (Blueprint $table) {
 
-            // penalty_id already exists.
-            // We only need to create its foreign key.
-            $table->foreign('penalty_id')
-                ->references('id')
-                ->on('offense_penalties')
+// We only need to create its foreign key.
+$table->foreignId('penalty_id')
+    ->nullable()
+    ->constrained('offense_penalties')
                 ->nullOnDelete();
 
             $table->text('resolution_notes')

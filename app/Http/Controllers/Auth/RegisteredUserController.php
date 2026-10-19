@@ -44,8 +44,8 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        //Auth::login($user); alaws nani kay ako gi merge ang login og register nga page so dili na mag login ang user after registration kay mag login na siya sa login page. oo 
+        Auth::login($user);
 
-        return redirect()->route('login')->with('status', 'Your account has been created successfully! Please log in.');
+        return redirect(route('dashboard', absolute: false));
     }
 }

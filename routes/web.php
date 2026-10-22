@@ -8,6 +8,7 @@ use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\UsersCreationController;
 use App\Http\Controllers\Superadmin\OffensesCreationController;
+use App\Http\Controllers\Superadmin\AuditController;
 use App\Http\Controllers\Student\AppealController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,9 @@ Route::middleware(['auth', 'role:4'])
         
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
+        
+        Route::get('/audits', [AuditController::class, 'index'])
+            ->name('audits.index');
 
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [UsersCreationController::class, 'index'])->name('index');

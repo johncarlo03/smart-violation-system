@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Appeal extends Model
+class Appeal extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'violation_id',
         'student_id',

@@ -4,25 +4,27 @@ use App\Models\Violation;
 use App\Models\Department;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
+use Illuminate\Database\Eloquent\Builder;
 
 new class extends Component {
 
     #[Computed]
     public function totalViolations()
     {
-        return Violation::count();
+        return $this->inPeriod()->where('status', '!=', 'void')->count();
     }
 
     #[Computed]
     public function pendingReview()
     {
-        return Violation::where('status', 'pending')->count();
+        return $this->inPeriod()->where('status', 'pending')->count();
     }
 
     #[Computed]
     public function majorIncidents()
     {
-        return Violation::whereHas(
+        return $this->inPeriod()->whereHas(
             'offense',
             fn($q) =>
                 $q->whereIn('category', ['Serious', 'Very Serious'])
@@ -38,7 +40,7 @@ new class extends Component {
     #[Computed]
     public function topOffenses()
     {
-        return Violation::selectRaw('offense_id, count(*) as total')
+        return $this->inPeriod()->selectRaw('offense_id, count(*) as total')
             ->where('status', '!=', 'void')
             ->with('offense')
             ->groupBy('offense_id')
@@ -51,8 +53,9 @@ new class extends Component {
     public function deptStats()
     {
         return Department::withCount([
-            'violations as total' => fn($q) =>
-                $q->where('status', '!=', 'void')
+            'violations as total' => fn ($q) => $q
+                ->where('status', '!=', 'void')
+                ->when($this->periodStart, fn ($q, $start) => $q->where('violations.created_at', '>=', $start)),
         ])->get()->map(function ($d) {
             $colors = [
                 1 => 'from-red-400 to-red-600',
@@ -74,10 +77,65 @@ new class extends Component {
             ->take(5)
             ->get();
     }
+
+    #[Url(as: 'period')]
+    public string $period = 'month';
+
+    public function setPeriod(string $period): void
+    {
+        $this->period = in_array($period, ['day', 'week', 'month', 'year', 'all'], true)
+            ? $period
+            : 'month';
+    }
+
+    #[Computed]
+    public function periodStart()
+    {
+        return match ($this->period) {
+            'day'   => now()->startOfDay(),
+            'week'  => now()->startOfWeek(),
+            'year'  => now()->startOfYear(),
+            'all'   => null,
+            default => now()->startOfMonth(),
+        };
+    }
+
+    #[Computed]
+    public function periodLabel(): string
+    {
+        return match ($this->period) {
+            'day'   => 'Today',
+            'week'  => 'This week',
+            'year'  => 'This year',
+            'all'   => 'All time',
+            default => 'This month',
+        };
+    }
+
+    private function inPeriod(): Builder
+    {
+        return Violation::query()
+            ->when($this->periodStart, fn ($q, $start) => $q->where('created_at', '>=', $start));
+    }
 };
 ?>
 
 <div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <p class="text-sm text-gray-500">
+        Showing <span class="font-semibold text-gray-800">{{ $this->periodLabel }}</span>
+    </p>
+
+    <div class="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm" role="group" aria-label="Time period">
+        @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
+            <button type="button" wire:click="setPeriod('{{ $key }}')"
+                class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
+                    {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                {{ $label }}
+            </button>
+        @endforeach
+    </div>
+</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:shadow-xl transition duration-300">
             <div class="flex items-center justify-between">

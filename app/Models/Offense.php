@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Offense extends Model
+class Offense extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = ['name', 'category'];
     public function penalties()
 {

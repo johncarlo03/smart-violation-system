@@ -72,6 +72,8 @@ new class extends Component {
                                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">CSO</span>
                             @elseif($user->role == 3)
                                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">SAO</span>
+                            @elseif($user->role == 5)
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-600 border border-green-100">Teaching Staff</span>
                             @else
                                 <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">Super Admin</span>
                             @endif

@@ -25,7 +25,7 @@ Route::get('/', function () {
 
 Route::get('/violation', function () {
     return view('cso/cso-dashboard');
-})->middleware(['auth', 'role:2,3'])->name('cso.dashboard'); //add for teacher soon 
+})->middleware(['auth', 'role:2,3,5'])->name('cso.dashboard'); //add for teacher soon 
 
 Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
     ->middleware(['auth', 'role:3'])
@@ -59,6 +59,7 @@ Route::middleware(['auth', 'role:4'])
 });
 
 Route::get('/dashboard', function () {
+    if (Auth::user()->role == 5) return redirect()->route('cso.dashboard');
     if (Auth::user()->role == 4) return redirect()->route('superadmin.dashboard');
     if (Auth::user()->role == 3) return redirect()->route('sao.dashboard');
     if (Auth::user()->role == 2) return redirect()->route('cso.dashboard');
@@ -90,9 +91,12 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 //         ->get(['id', 'name', 'rfid_number', 'id_number']);
 // });
 
-Route::middleware(['auth', 'role:2,3'])->group(function () {
+Route::middleware(['auth', 'role:2,3,5'])->group(function () {
     Route::post('/violations', [ViolationController::class, 'store'])
         ->name('violations.store');
+    
+    Route::get('/violations/records', [ViolationController::class, 'index'])
+        ->name('sao.violations.index');
 });
 
 Route::middleware(['auth', 'role:3'])->group(function () {
@@ -104,9 +108,6 @@ Route::middleware(['auth', 'role:3'])->group(function () {
 
     Route::put('/violations/{violation}/dismiss', [ViolationController::class, 'dismiss'])
         ->name('violations.dismiss');
-
-    Route::get('/violations/records', [ViolationController::class, 'index'])
-        ->name('sao.violations.index');
 
 });
 

@@ -82,6 +82,14 @@ nav[role="navigation"] span.text-gray-400 {
                     </div>
                 @endif
 
+                @if ($errors->any())
+                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
+                @foreach ($errors->all() as $error)
+                    <p>{{ $error }}</p>
+                @endforeach
+                    </div>
+                @endif
+
                 <div class="w-full bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-10">
                     <div
                         class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100/50 flex justify-between items-center">
@@ -181,7 +189,7 @@ nav[role="navigation"] span.text-gray-400 {
                                 User Roles
                             </label>
 
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <label
                                     class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
                                     <div class="flex items-center h-5">
@@ -204,6 +212,19 @@ nav[role="navigation"] span.text-gray-400 {
                                         <span
                                             class="block text-xs font-black uppercase tracking-wider text-orange-600">CSO
                                             Officer</span>
+                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
+                                            & data</span>
+                                    </div>
+                                </label>
+
+                                <label
+                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" name="role" value="5" {{ old('role') == '5' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    </div>
+                                    <div class="ml-3">
+                                        <span
+                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Teaching Staff</span>
                                         <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
                                             & data</span>
                                     </div>
@@ -243,7 +264,7 @@ nav[role="navigation"] span.text-gray-400 {
 
                             <div id="student-fields" class="hidden mt-6">
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div>
+                                    <div id="department-field">
                                         <label
                                             class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
                                             Department
@@ -262,31 +283,33 @@ nav[role="navigation"] span.text-gray-400 {
                                         </select>
                                     </div>
 
-                                    <div>
-                                        <label
-                                            class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
-                                            Course
-                                        </label>
-                                        <select id="course" name="course_id" disabled
-                                            class="w-full rounded-xl border-gray-200">
-                                            <option value="">Select Department First</option>
-                                        </select>
+                                        <div id="student-extra-fields" class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                                    Course
+                                                </label>
+                                                <select id="course" name="course_id" disabled
+                                                    class="w-full rounded-xl border-gray-200">
+                                                    <option value="">Select Department First</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                            <label
+                                                class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                                Year Level
+                                            </label>
+                                            <select id="year_level" name="year_level" class="w-full rounded-xl border-gray-200">
+                                                <option value="">Select Year</option>
+                                                @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
+                                                    <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <label
-                                            class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
-                                            Year Level
-                                        </label>
-                                        <select id="year_level" name="year_level" class="w-full rounded-xl border-gray-200">
-                                            <option value="">Select Year</option>
-                                            @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
-                                                <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
-                                                    {{ $label }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    
                                 </div>
                             </div>
                         </div>
@@ -342,13 +365,26 @@ nav[role="navigation"] span.text-gray-400 {
         const storeRoute = "{{ route('superadmin.users.store') }}";
 
         // Handle structural role logic toggles
-        function toggleRoleFields(roleValue) {
-            if (roleValue == '1') {
-                studentFields.classList.remove('hidden');
-            } else {
-                studentFields.classList.add('hidden');
-            }
+        
+    function toggleRoleFields(roleValue) {
+        const extra = document.getElementById('student-extra-fields');
+        const isStudent = roleValue == '1';
+        const needsDepartment = isStudent || roleValue == '5';
+
+        studentFields.classList.toggle('hidden', !needsDepartment);
+        extra.classList.toggle('hidden', !isStudent);
+
+        department.disabled = !needsDepartment;
+        if (!needsDepartment) department.value = '';
+
+        yearLevel.disabled = !isStudent;
+        if (!isStudent) {
+            yearLevel.value = '';
+            course.value = '';
+            course.disabled = true;
         }
+    }
+
 
         roleRadios.forEach(radio => {
             radio.addEventListener('change', function () {
@@ -438,16 +474,12 @@ department.addEventListener('change', function () {
                 });
 
                 // 5. Build dropdown selections out if student layout tier applies
-                if (data.role == '1') {
+                if (data.role == '1' || data.role == '5') {
                     department.value = data.department_id;
-                    // Trigger custom change pass-through down to Course parsing handler
-                    department.dispatchEvent(new Event('change'));
+                }
 
-                    // Small delay sequence ensures elements mount options securely prior to matching selection hooks
-                    setTimeout(() => {
-                        course.value = data.course_id;
-                    }, 50);
-
+                if (data.role == '1') {
+                    loadCourses(data.department_id, data.course_id);
                     yearLevel.value = data.year_level;
                 }
 

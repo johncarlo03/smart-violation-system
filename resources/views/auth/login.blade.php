@@ -20,18 +20,23 @@
                 background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
                 background-size: 20px 20px;
             }
+            /* Optimization: Force GPU/CPU layer composition hint */
+            .gpu-accelerated {
+                will-change: transform;
+                transform: translateZ(0);
+            }
         </style>
     </head>
     <body class="font-sans antialiased text-gray-800 bg-gray-900 min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative px-4 py-8" style="background-image: url('{{ asset('images/campus.jpg') }}');">
         
-        <!-- Dark Overlay -->
-        <div class="absolute inset-0 bg-gray-900/80 backdrop-blur-sm"></div>
+        <!-- Optimized Dark Overlay: Replaced backdrop-filter with solid dark opacity for CPU safety -->
+        <div class="absolute inset-0 bg-gray-900/90"></div>
 
         <!-- Main Auth Container -->
-        <div class="relative z-10 w-full max-w-5xl h-[650px] bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden flex" x-data="{ isRegister: false }">
+        <div class="relative z-10 w-full max-w-5xl h-[650px] bg-white rounded-[2rem] shadow-2xl overflow-hidden flex" x-data="{ isRegister: false }">
             
-            <!-- LEFT SIDE: Register Form (Hidden initially) -->
-            <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-500 z-0"
+            <!-- LEFT SIDE: Register Form -->
+            <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
                  :class="isRegister ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
                 
                 <div class="w-full max-w-sm flex flex-col h-full justify-center">
@@ -96,12 +101,11 @@
                                 class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm" placeholder="Confirm Password">
                         </div>
 
-                        <button type="submit" class="w-full py-3 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow-lg hover:shadow-red-500/30 transition-all transform hover:-translate-y-0.5">
+                        <button type="submit" class="w-full py-3 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow transition-all">
                             Create Account
                         </button>
                     </form>
 
-                    <!-- Back to Home Link (Register) -->
                     <div class="mt-6 text-center">
                         <a href="/" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -111,8 +115,8 @@
                 </div>
             </div>
 
-            <!-- RIGHT SIDE: Login Form (Visible initially) -->
-            <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-500 z-0"
+            <!-- RIGHT SIDE: Login Form -->
+            <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
                  :class="isRegister ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'">
                 
                 <div class="w-full max-w-sm flex flex-col h-full justify-center">
@@ -160,12 +164,11 @@
                             @endif
                         </div>
 
-                        <button type="submit" class="w-full py-3.5 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow-lg hover:shadow-red-500/30 transition-all transform hover:-translate-y-0.5">
+                        <button type="submit" class="w-full py-3.5 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow transition-all">
                             Sign In
                         </button>
                     </form>
 
-                    <!-- Back to Home Link (Login) -->
                     <div class="mt-8 text-center">
                         <a href="/" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
@@ -175,28 +178,26 @@
                 </div>
             </div>
 
-            <!-- SLIDING OVERLAY PANEL -->
-            <div class="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-red-600 via-red-700 to-red-900 text-white flex flex-col items-center justify-center p-10 transition-transform duration-700 cubic-bezier(0.68, -0.55, 0.265, 1.55) z-20 shadow-[0_0_40px_rgba(0,0,0,0.3)] overflow-hidden"
+            <!-- SLIDING OVERLAY PANEL: Optimized Transitions & Removed heavy blur filters -->
+            <div class="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-red-600 to-red-900 text-white flex flex-col items-center justify-center p-10 transition-transform duration-500 ease-in-out z-20 shadow-xl overflow-gpu-accelerated"
                  :class="isRegister ? 'translate-x-full' : 'translate-x-0'">
                 
-                <!-- Decorative Background Circles -->
-                <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                    <div class="absolute -top-20 -left-20 w-64 h-64 bg-white opacity-10 rounded-full blur-2xl"></div>
-                    <div class="absolute bottom-10 -right-10 w-48 h-48 bg-yellow-400 opacity-20 rounded-full blur-2xl"></div>
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 border-[1px] border-white/10 rounded-full"></div>
-                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 border-[1px] border-white/10 rounded-full"></div>
+                <!-- Simplified background shapes without heavy blur filters -->
+                <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20">
+                    <div class="absolute -top-20 -left-20 w-64 h-64 bg-white rounded-full"></div>
+                    <div class="absolute bottom-10 -right-10 w-48 h-48 bg-yellow-400 rounded-full"></div>
                 </div>
 
                 <div class="relative z-10 flex flex-col items-center text-center">
-                    <div class="p-4 bg-white/10 rounded-full backdrop-blur-md mb-6 shadow-inner">
-                        <img src="{{ asset('images/ctu-logo.png') }}" alt="CTU Logo" class="h-24 w-24 drop-shadow-2xl">
+                    <div class="p-4 bg-white/10 rounded-full mb-6 shadow-inner">
+                        <img src="{{ asset('images/ctu-logo.png') }}" alt="CTU Logo" class="h-24 w-24">
                     </div>
 
                     <!-- Text for Login Mode -->
                     <div x-show="!isRegister" class="space-y-6 w-full max-w-[280px]">
                         <h2 class="text-3xl font-extrabold tracking-tight">New Here?</h2>
                         <p class="text-red-100 text-sm leading-relaxed">Create an account to start reporting and tracking violations seamlessly.</p>
-                        <button @click="isRegister = true" class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all backdrop-blur-sm">
+                        <button @click="isRegister = true" class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all">
                             Create Account
                         </button>
                     </div>
@@ -205,7 +206,7 @@
                     <div x-show="isRegister" class="space-y-6 w-full max-w-[280px]" style="display: none;">
                         <h2 class="text-3xl font-extrabold tracking-tight">Welcome Back!</h2>
                         <p class="text-red-100 text-sm leading-relaxed">Already part of the system? Log in to access your dashboard and records.</p>
-                        <button @click="isRegister = false" class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all backdrop-blur-sm">
+                        <button @click="isRegister = false" class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all">
                             Sign In
                         </button>
                     </div>

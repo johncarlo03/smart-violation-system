@@ -18,6 +18,11 @@ return new class extends Migration
         $table->foreignId('cso_id')->constrained('users')->onDelete('cascade');
         $table->foreignId('department_id')->constrained()->onDelete('cascade');
         
+
+        $table->foreignId('penalty_id')
+        ->nullable()
+        ->constrained('offense_penalties')
+        ->nullOnDelete();
         // Violation Details
         $table->string('type'); // e.g., "Academic: Plagiarism"
         $table->text('description');

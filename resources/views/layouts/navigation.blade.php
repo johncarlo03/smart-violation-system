@@ -16,9 +16,15 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
-                    @if(in_array(Auth::user()->role, [2, 3]))
+                    @if(in_array(Auth::user()->role, [3]))
                         <x-nav-link :href="route('sao.violations.index')" :active="request()->routeIs('sao.violations.index')">
                             {{ __('Violation Records') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if(in_array(Auth::user()->role, [2, 5]))
+                        <x-nav-link :href="route('teacher.reports.index')" :active="request()->routeIs('teacher.reports.index')">
+                            {{ __('My Reports') }}
                         </x-nav-link>
                     @endif
                 </div>

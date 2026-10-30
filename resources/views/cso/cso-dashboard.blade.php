@@ -99,9 +99,21 @@
 
     <x-slot name="header">
         <div class="flex items-center justify-between">
+            @if(in_array(Auth::user()->role, [2]))
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ Auth::user()->name }}'s Dashboard
+                Campus Safety Officer's Dashboard
             </h2>
+            @endif
+            @if(in_array(Auth::user()->role, [5]))
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Teaching Staff's Dashboard
+            </h2>
+            @endif
+            @if(in_array(Auth::user()->role, [3]))
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                SAO Violation Report
+            </h2>
+            @endif
             @if(auth()->user()->role != 2)
                 <a href="{{ url()->previous(route('dashboard')) }}"
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200">

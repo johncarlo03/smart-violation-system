@@ -24,3 +24,4 @@ Homestead.yaml
 Thumbs.db
 .env copy
 .env copy 2
+.env cloudflare

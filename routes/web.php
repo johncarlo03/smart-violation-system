@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SAO\SAOAdminController;
 use App\Http\Controllers\Student\ChatbotController;
+use App\Http\Controllers\Teacher\ReportsController;
 use App\Http\Controllers\CSO\ViolationController;
 use App\Http\Controllers\Student\StudentController;
 use App\Http\Controllers\Superadmin\DashboardController;
@@ -97,6 +98,11 @@ Route::middleware(['auth', 'role:2,3,5'])->group(function () {
     
     Route::get('/violations/records', [ViolationController::class, 'index'])
         ->name('sao.violations.index');
+    
+    Route::get('/violations/reports', [ReportsController::class, 'index'])
+        ->name('teacher.reports.index');
+
+    Route::get('/my-reports', [ReportsController::class, 'index'])->name('reports.mine');
 });
 
 Route::middleware(['auth', 'role:3'])->group(function () {

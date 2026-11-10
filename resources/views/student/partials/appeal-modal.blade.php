@@ -35,7 +35,7 @@
                 <textarea name="reason" rows="5" required minlength="20" maxlength="2000"
                     class="w-full rounded-xl border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                     placeholder="Explain why you believe this violation should be reviewed..."></textarea>
-                <p class="text-xs text-gray-400 mt-1">Please provide a clear and factual explanation.</p>
+                <p class="text-xs text-gray-600 mt-1">Please provide a clear and factual explanation. (Minimum of 10 words)</p>
             </div>
 
             <div class="mb-6">

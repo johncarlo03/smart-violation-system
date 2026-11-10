@@ -108,7 +108,7 @@ nav[role="navigation"] span.text-gray-400 {
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     Full Name
                                 </label>
                                 <input type="text" name="name" id="input-name" value="{{ old('name') }}" required
@@ -119,7 +119,7 @@ nav[role="navigation"] span.text-gray-400 {
                             </div>
 
                             <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     ID Number:
                                 </label>
                                 <input type="number" name="id_number" id="input-id_number"
@@ -131,7 +131,7 @@ nav[role="navigation"] span.text-gray-400 {
                             </div>
 
                             <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     rfid(if applicable)
                                 </label>
                                 <input type="number" name="rfid_number" id="input-rfid_number"
@@ -144,7 +144,7 @@ nav[role="navigation"] span.text-gray-400 {
 
                             {{-- Institutional Email Address Input Field --}}
                             <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     Email
                                 </label>
                                 <input type="email" name="email" id="input-email" value="{{ old('email') }}" required
@@ -159,7 +159,7 @@ nav[role="navigation"] span.text-gray-400 {
                             {{-- Account Security Access Password Input --}}
                             <div>
                                 <label id="password-label"
-                                    class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                    class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     Password
                                 </label>
                                 <input type="password" name="password" id="input-password" required
@@ -172,7 +172,7 @@ nav[role="navigation"] span.text-gray-400 {
                             {{-- Confirm Password Input Field --}}
                             <div>
                                 <label id="password-confirm-label"
-                                    class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
+                                    class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
                                     Confirm Password
                                 </label>
                                 <input type="password" name="password_confirmation" id="input-password_confirmation"
@@ -185,7 +185,7 @@ nav[role="navigation"] span.text-gray-400 {
 
                         {{-- Structural Role Assignment Radio Nodes --}}
                         <div>
-                            <label class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-3">
+                            <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-3">
                                 User Roles
                             </label>
 

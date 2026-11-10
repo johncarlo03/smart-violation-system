@@ -75,7 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:1'])->group(function () {
 
     Route::post(
         '/student/violations/{violation}/appeal',
@@ -119,7 +119,7 @@ Route::middleware(['auth', 'role:3'])->group(function () {
 
 Route::get('/departments/{department}/courses', function ($departmentId) {
 
-    return \App\Models\Course::where(
+return \App\Models\Course::where(
         'department_id',
         $departmentId
     )->get();

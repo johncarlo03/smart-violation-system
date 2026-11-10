@@ -11,10 +11,32 @@
                     <p class="text-sm text-gray-500 mt-1">
                         A read-only record of who changed what, and when.
                     </p>
-                </div>
+                    @php
+    $tab = request('tab') === 'logins' ? 'logins' : 'changes';
+@endphp
+
+<div class="flex gap-1 mb-6 border-b border-gray-200">
+    @foreach(['changes' => 'Changes', 'logins' => 'Logins'] as $key => $label)
+        <a href="{{ url()->current() }}{{ $key === 'logins' ? '?tab=logins' : '' }}"
+            class="px-5 py-3 text-sm font-bold border-b-2 -mb-px transition
+                {{ $tab === $key ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-gray-500 hover:text-gray-800' }}">
+            {{ $label }}
+        </a>
+    @endforeach
+</div>
+
+</div>
+
+@if($tab === 'logins')
+    @include('superadmin.partials.login-logs')
+@else
+
+
+                
 
                 {{-- Filters --}}
                 <form method="GET" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-5 mb-6">
+                    <input type="hidden" name="tab" value="changes">
                     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
 
                         <div>
@@ -197,7 +219,7 @@
                         </div>
                     @endif
                 </div>
-
+@endif
             </main>
         </div>
     </div>

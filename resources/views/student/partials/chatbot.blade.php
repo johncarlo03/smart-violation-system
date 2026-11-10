@@ -1,39 +1,60 @@
 
     <div x-data="{
-                open: false,
-                loading: false,
-                messages: [
-                    {text: 'Hi! I am the CTU-SAO Assistant. How can I help you today?', bot: true}
-                ],
-                formatText(text) {
-                    if (!text) return '';
-                    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                },
-                sendMessage() {
-                    let userMsg = this.$refs.input.value;
-                    if (!userMsg.trim() || this.loading) return;
+    open: false,
+    loading: false,
+    messages: [
+        {text: 'Hi! I am the CTU-SAO Assistant. How can I help you today?', bot: true}
+    ],
+    formatText(text) {
+        if (!text) return '';
+        const el = document.createElement('div');
+        el.textContent = String(text);
+        return el.innerHTML
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+    },
+    scrollDown() {
+        this.$nextTick(() => {
+            const box = document.getElementById('chat-box');
+            if (box) box.scrollTop = box.scrollHeight;
+        });
+    },
+    sendMessage() {
+        const userMsg = this.$refs.input.value.trim();
+        if (!userMsg || this.loading) return;
 
-                    this.messages.push({text: userMsg, bot: false});
-                    this.$refs.input.value = '';
-                    this.loading = true;
+        this.messages.push({text: userMsg, bot: false});
+        this.$refs.input.value = '';
+        this.loading = true;
+        this.scrollDown();
 
-                    fetch(`/chatbot/ask?query=${encodeURIComponent(userMsg)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            this.messages.push({text: data.reply ?? 'No response', bot: true});
-                        })
-                        .catch(() => {
-                            this.messages.push({text: 'Connection error. Please try again.', bot: true});
-                        })
-                        .finally(() => {
-                            this.loading = false;
-                            setTimeout(() => {
-                                const box = document.getElementById('chat-box');
-                                if (box) box.scrollTop = box.scrollHeight;
-                            }, 50);
-                        });
-                }
-            }" class="fixed bottom-6 right-6 z-50">
+        fetch('/chatbot/ask', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+            },
+            body: JSON.stringify({ query: userMsg }),
+        })
+            .then(res => {
+                if (res.status === 429) return { reply: 'You are sending messages too fast. Please wait a moment and try again.' };
+                if (res.status === 419) return { reply: 'Your session expired. Please refresh the page.' };
+                if (res.status === 401) return { reply: 'Please log in again to use the assistant.' };
+                return res.json();
+            })
+            .then(data => {
+                this.messages.push({text: data.reply ?? 'No response', bot: true});
+            })
+            .catch(() => {
+                this.messages.push({text: 'Connection error. Please try again.', bot: true});
+            })
+            .finally(() => {
+                this.loading = false;
+                this.scrollDown();
+            });
+    }
+}" class="fixed bottom-6 right-6 z-50">
 
         <!-- Chat Window -->
         <div x-show="open" x-transition:enter="transition ease-out duration-200"

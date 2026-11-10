@@ -126,7 +126,8 @@ return \App\Models\Course::where(
 
 });
 
-Route::get('/chatbot/ask', [ChatbotController::class, 'ask'])->middleware(['auth']);
-
+Route::middleware(['auth', 'role:1', 'throttle:20,1'])->group(function () {
+    Route::post('/chatbot/ask', [ChatbotController::class, 'ask'])->name('chatbot.ask');
+});
 
 require __DIR__.'/auth.php';

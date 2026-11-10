@@ -16,7 +16,6 @@ class RoleMiddleware
 
         $userRole = auth()->user()->role;
 
-        // If user role is NOT allowed, block access
         if (!in_array($userRole, $roles)) {
             abort(403, 'Unauthorized access');
         }

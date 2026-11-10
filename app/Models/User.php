@@ -81,4 +81,16 @@ class User extends Authenticatable implements Auditable
         return $this->hasMany(Violation::class, 'student_id');
     }
 
+    public function homeUrl(): string
+    {
+        return match ((int) $this->role) {
+            1 => route('student.dashboard'),                    // Student
+            2 => route('cso.dashboard'),                // CSO
+            3 => route('sao.dashboard.index'),         // SAO
+            4 => route('superadmin.users.index'),       // Super Admin
+            5 => route('cso.dashboard'),                 // Teaching staff
+            default => route('dashboard'),
+        };
+    }
+
 }

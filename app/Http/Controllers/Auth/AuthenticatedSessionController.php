@@ -28,14 +28,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if($request->user()->role === 4){
-            return redirect()->intended('/superadmin/dashboard');
-        } elseif($request->user()->role === 3){
-            return redirect()->intended('/sao/dashboard');
-        } elseif ($request->user()->role === 2){
-            return redirect()->intended('/violation');
-        }
-        return redirect()->intended(route('dashboard', absolute: false));
+        $home = match ((int) $request->user()->role) {
+            4 => '/superadmin/dashboard',
+            3 => '/sao/dashboard',
+            2, 5 => '/violation',                          // CSO and teaching staff
+            default => route('dashboard', absolute: false),   // students
+        };
+        return redirect()->intended($home);
     }
 
     /**

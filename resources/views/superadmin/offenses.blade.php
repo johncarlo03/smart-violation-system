@@ -94,10 +94,10 @@
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2">
-                <x-primary-button type="button" onclick="document.getElementById('create-modal').close()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium">Cancel</x-primary-button>
-                <x-primary-button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Submit</x-primary-button>
+                <button type="button" onclick="document.getElementById('create-modal').close()"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium">Cancel</button>
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Submit</button>
             </div>
         </form>
     </dialog>

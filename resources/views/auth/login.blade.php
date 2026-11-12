@@ -27,6 +27,110 @@
             will-change: transform;
             transform: translateZ(0);
         }
+
+        /* Mobile-only responsiveness: desktop styles remain unchanged */
+        @media (max-width: 767px) {
+            body {
+                align-items: flex-start;
+                justify-content: center;
+                min-height: 100vh;
+                min-height: 100svh;
+                padding: 1.25rem 0.75rem;
+            }
+
+            .auth-container {
+                width: 100%;
+                max-width: 28rem;
+                height: auto;
+                min-height: 0;
+                flex-direction: column;
+                border-radius: 1.5rem;
+            }
+
+            .mobile-auth-toggle {
+                display: flex;
+                width: 100%;
+                gap: 0.5rem;
+                padding: 1rem 1.25rem 0;
+                background: white;
+            }
+
+            .mobile-auth-toggle button {
+                flex: 1;
+                min-width: 0;
+                padding: 0.7rem 0.75rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.75rem;
+                color: #6b7280;
+                background: #f9fafb;
+                font-size: 0.875rem;
+                font-weight: 700;
+                transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+            }
+
+            .mobile-auth-toggle button.active {
+                color: #ffffff;
+                border-color: #b91c1c;
+                background: #b91c1c;
+            }
+
+            .auth-panel {
+                width: 100%;
+                height: auto;
+                min-height: 0;
+                padding: 1.5rem 1.25rem 1.75rem;
+            }
+
+            .auth-panel.opacity-0 {
+                display: none;
+            }
+
+            .auth-panel.opacity-100 {
+                display: flex;
+            }
+
+            .auth-panel>div {
+                width: 100%;
+                height: auto;
+                max-width: 24rem;
+            }
+
+            .auth-panel h2 {
+                font-size: 1.75rem;
+                line-height: 2.1rem;
+            }
+
+            .sliding-auth-overlay {
+                display: none;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body {
+                padding-right: 0.5rem;
+                padding-left: 0.5rem;
+            }
+
+            .auth-panel {
+                padding-right: 1rem;
+                padding-left: 1rem;
+            }
+
+            .mobile-auth-toggle {
+                padding-right: 1rem;
+                padding-left: 1rem;
+            }
+
+            .auth-panel h2 {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .mobile-auth-toggle {
+                display: none;
+            }
+        }
     </style>
 </head>
 
@@ -38,11 +142,22 @@
     <div class="absolute inset-0 bg-gray-900/90"></div>
 
     <!-- Main Auth Container -->
-    <div class="relative z-10 w-full max-w-5xl h-[650px] bg-white rounded-[2rem] shadow-2xl overflow-hidden flex"
+    <div class="auth-container relative z-10 w-full max-w-5xl h-[650px] bg-white rounded-[2rem] shadow-2xl overflow-hidden flex"
         x-data="{ isRegister: false }">
 
+
+        <!-- MOBILE-ONLY AUTH TOGGLE -->
+        <div class="mobile-auth-toggle" aria-label="Choose sign-in or registration">
+            <button type="button" :class="!isRegister ? 'active' : ''" @click="isRegister = false">
+                Sign In
+            </button>
+            <button type="button" :class="isRegister ? 'active' : ''" @click="isRegister = true">
+                Create Account
+            </button>
+        </div>
+
         <!-- LEFT SIDE: Register Form -->
-        <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
+        <div class="auth-panel w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
             :class="isRegister ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
 
             <div class="w-full max-w-sm flex flex-col h-full justify-center">
@@ -143,7 +258,9 @@
                     </div>
 
                     <!-- Password Input -->
-                    <div class="relative group">
+
+                    <!-- Password Input -->
+                    <div class="relative group" x-data="{ showPassword: false }">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,13 +269,38 @@
                                 </path>
                             </svg>
                         </div>
-                        <input id="register_password" type="password" name="password" required
-                            class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
+
+                        <input id="register_password" :type="showPassword ? 'text' : 'password'" name="password"
+                            required
+                            class="w-full pl-11 pr-12 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
                             placeholder="Password">
+
+                        <button type="button" @click="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-600 transition-colors"
+                            :aria-label="showPassword ? 'Hide password' : 'Show password'">
+
+                            <!-- Eye Icon -->
+                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
+                            </svg>
+
+                            <!-- Eye Off Icon -->
+                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7a10.97 10.97 0 01-4.132 5.411 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Confirm Password Input -->
-                    <div class="relative group">
+
+                    <!-- Confirm Password Input -->
+                    <div class="relative group" x-data="{ showPassword: false }">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,10 +309,32 @@
                                 </path>
                             </svg>
                         </div>
-                        <input id="register_password_confirmation" type="password" name="password_confirmation" required
-                            class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
+
+                        <input id="register_password_confirmation" :type="showPassword ? 'text' : 'password'"
+                            name="password_confirmation" required
+                            class="w-full pl-11 pr-12 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
                             placeholder="Confirm Password">
+
+                        <button type="button" @click="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-600 transition-colors"
+                            :aria-label="showPassword ? 'Hide password' : 'Show password'">
+
+                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
+                            </svg>
+
+                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7a10.97 10.97 0 01-4.132 5.411 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
+                            </svg>
+                        </button>
                     </div>
+
 
                     <button type="submit"
                         class="w-full py-3 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow transition-all">
@@ -192,7 +356,7 @@
         </div>
 
         <!-- RIGHT SIDE: Login Form -->
-        <div class="w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
+        <div class="auth-panel w-1/2 h-full flex flex-col items-center justify-center p-10 bg-grid-pattern transition-opacity duration-300 z-0"
             :class="isRegister ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'">
 
             <div class="w-full max-w-sm flex flex-col h-full justify-center">
@@ -229,7 +393,9 @@
                     </div>
 
                     <!-- Password Input -->
-                    <div class="relative group">
+
+                    <!-- Password Input -->
+                    <div class="relative group" x-data="{ showPassword: false }">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400 group-focus-within:text-red-600 transition-colors"
                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,10 +404,31 @@
                                 </path>
                             </svg>
                         </div>
-                        <input id="login_password" type="password" name="password" required
-                            class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
+
+                        <input id="login_password" :type="showPassword ? 'text' : 'password'" name="password" required
+                            class="w-full pl-11 pr-12 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-sm"
                             placeholder="Password">
+
+                        <button type="button" @click="showPassword = !showPassword"
+                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-red-600 transition-colors"
+                            :aria-label="showPassword ? 'Hide password' : 'Show password'">
+
+                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
+                            </svg>
+
+                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7a10.97 10.97 0 01-4.132 5.411 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
+                            </svg>
+                        </button>
                     </div>
+
 
                     <div class="flex items-center justify-between mt-2">
                         <label class="flex items-center text-sm text-gray-600 cursor-pointer">
@@ -276,7 +463,7 @@
         </div>
 
         <!-- SLIDING OVERLAY PANEL: Optimized Transitions & Removed heavy blur filters -->
-        <div class="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-red-600 to-red-900 text-white flex flex-col items-center justify-center p-10 transition-transform duration-500 ease-in-out z-20 shadow-xl overflow-gpu-accelerated"
+        <div class="sliding-auth-overlay absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-red-600 to-red-900 text-white flex flex-col items-center justify-center p-10 transition-transform duration-500 ease-in-out z-20 shadow-xl overflow-gpu-accelerated"
             :class="isRegister ? 'translate-x-full' : 'translate-x-0'">
 
             <!-- Simplified background shapes without heavy blur filters -->

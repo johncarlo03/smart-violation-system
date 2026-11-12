@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Course, Department, LoginLog, Offense, Penalty, User, Violation};
+use App\Models\{Course, Department, LoginLog, Offense, OffensePenalty, User, Violation};
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use OwenIt\Auditing\Models\Audit;
@@ -46,7 +46,7 @@ class AuditController extends Controller
             'department_id' => [Department::class, 'name'],
             'course_id'     => [Course::class, 'name'],
             'offense_id'    => [Offense::class, 'name'],
-            'penalty_id'    => [Penalty::class, 'penalty_description'],
+            'penalty_id'    => [OffensePenalty::class, 'penalty_description'],
         ];
 
         $labels = [];

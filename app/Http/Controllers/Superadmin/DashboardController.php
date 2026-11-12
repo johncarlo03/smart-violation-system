@@ -16,6 +16,7 @@ class DashboardController extends Controller
         // Assuming role 1 = Student, 2 = CSO, 3 = SAO, 4 = Superadmin
         $activeCSO = User::whereIn('role', [2])->count();
         $activeSAO = User::whereIn('role', [3])->count(); 
+        $activeTS = User::whereIn('role', [5])->count();
         $databasePayload = Violation::count(); // Total records processed by the app
 
         // 2. Chart 1: Account Distribution by Department (How heavy is each database link)
@@ -41,6 +42,7 @@ class DashboardController extends Controller
             'totalUsers', 
             'activeCSO',
             'activeSAO',
+            'activeTS',
             'databasePayload', 
             'deptStats', 
             'topOfficers', 

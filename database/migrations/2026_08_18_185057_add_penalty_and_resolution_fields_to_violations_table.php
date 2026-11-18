@@ -9,6 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('violations', function (Blueprint $table) {
+
+            // penalty_id already exists.
+            // We only need to create its foreign key.
+            $table->foreign('penalty_id')
+                ->references('id')
+                ->on('offense_penalties')
+                ->nullOnDelete();
+
             $table->text('resolution_notes')
                 ->nullable()
                 ->after('status');
@@ -26,9 +34,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('violations', function (Blueprint $table) {
+
+            $table->dropForeign(['penalty_id']);
+
             $table->dropColumn([
                 'resolution_notes',
-                'dismissal_reason',
                 'resolved_at',
             ]);
         });

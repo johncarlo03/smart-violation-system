@@ -1,16 +1,21 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+
 use App\Http\Controllers\SAO\SAOAdminController;
-use App\Http\Controllers\Student\ChatbotController;
 use App\Http\Controllers\Teacher\ReportsController;
 use App\Http\Controllers\CSO\ViolationController;
+
+use App\Http\Controllers\Student\ChatbotController;
 use App\Http\Controllers\Student\StudentController;
+use App\Http\Controllers\Student\AppealController;
+
 use App\Http\Controllers\Superadmin\DashboardController;
 use App\Http\Controllers\Superadmin\UsersCreationController;
 use App\Http\Controllers\Superadmin\OffensesCreationController;
 use App\Http\Controllers\Superadmin\AuditController;
-use App\Http\Controllers\Student\AppealController;
+
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 // use Illuminate\Http\Request;
@@ -26,13 +31,13 @@ Route::get('/', function () {
 
 Route::get('/violation', function () {
     return view('cso/cso-dashboard');
-})->middleware(['auth', 'role:2,3,5'])->name('cso.dashboard'); //add for teacher soon 
+})->middleware(['auth', 'verified', 'role:2,3,5,6,7'])->name('cso.dashboard'); //add for teacher soon 
 
-Route::get('/sao/dashboard', [SAOAdminController::class, 'index'])
-    ->middleware(['auth', 'role:3'])
+Route::get('/violations/dashboard', [SAOAdminController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:3,6,7'])
     ->name('sao.dashboard');
 
-Route::middleware(['auth', 'role:4'])
+Route::middleware(['auth', 'verified', 'role:4'])
     ->prefix('superadmin')
     ->name('superadmin.')
     ->group(function () {
@@ -60,6 +65,8 @@ Route::middleware(['auth', 'role:4'])
 });
 
 Route::get('/dashboard', function () {
+    if (Auth::user()->role == 7) return redirect()->route('sao.dashboard');
+    if (Auth::user()->role == 6) return redirect()->route('sao.dashboard');
     if (Auth::user()->role == 5) return redirect()->route('cso.dashboard');
     if (Auth::user()->role == 4) return redirect()->route('superadmin.dashboard');
     if (Auth::user()->role == 3) return redirect()->route('sao.dashboard');
@@ -69,13 +76,13 @@ Route::get('/dashboard', function () {
     return abort(403, 'Unauthorized Role');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'role:1'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:1'])->group(function () {
 
     Route::post(
         '/student/violations/{violation}/appeal',
@@ -84,7 +91,7 @@ Route::middleware(['auth', 'role:1'])->group(function () {
 
 });
 
-Route::get('/students/search', [StudentController::class, 'search'])->name('students.search');
+Route::get('/students/search', [StudentController::class, 'search'])->name('students.search')->middleware(['auth','verified', 'role:2,3,5,6,7']);
 // Route::get('/students/search', function (Request $request) {
 //     return User::where('role', 1)
 //         ->where('name', 'like', '%' . $request->q . '%')
@@ -92,7 +99,7 @@ Route::get('/students/search', [StudentController::class, 'search'])->name('stud
 //         ->get(['id', 'name', 'rfid_number', 'id_number']);
 // });
 
-Route::middleware(['auth', 'role:2,3,5'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:2,3,5,6,7'])->group(function () {
     Route::post('/violations', [ViolationController::class, 'store'])
         ->name('violations.store');
     
@@ -105,14 +112,14 @@ Route::middleware(['auth', 'role:2,3,5'])->group(function () {
     Route::get('/my-reports', [ReportsController::class, 'index'])->name('reports.mine');
 });
 
-Route::middleware(['auth', 'role:3'])->group(function () {
-    Route::get('/violations/{violation}/manage', [ViolationController::class, 'manage'])
+Route::middleware(['auth', 'verified', 'role:3,6,7'])->group(function () {
+    Route::get('/violations/{violation:uuid}/manage', [ViolationController::class, 'manage'])
         ->name('violations.manage');
 
-    Route::put('/violations/{violation}/resolve', [ViolationController::class, 'resolve'])
+    Route::put('/violations/{violation:uuid}/resolve', [ViolationController::class, 'resolve'])
         ->name('violations.resolve');
 
-    Route::put('/violations/{violation}/dismiss', [ViolationController::class, 'dismiss'])
+    Route::put('/violations/{violation:uuid}/dismiss', [ViolationController::class, 'dismiss'])
         ->name('violations.dismiss');
 
 });
@@ -124,9 +131,9 @@ return \App\Models\Course::where(
         $departmentId
     )->get();
 
-});
+})->middleware(['auth','verified',]);
 
-Route::middleware(['auth', 'role:1', 'throttle:20,1'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:1', 'throttle:20,1'])->group(function () {
     Route::post('/chatbot/ask', [ChatbotController::class, 'ask'])->name('chatbot.ask');
 });
 

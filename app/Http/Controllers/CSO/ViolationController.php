@@ -12,49 +12,56 @@ use \App\Models\Offense;
 
 class ViolationController extends Controller
 {
+
+    private function getUserOffice(): string
+    {
+        return match ((int) auth()->user()->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => abort(403, 'Unauthorized access.'),
+        };
+    }
+
+    private function getPendingStatus(): string
+    {
+        return match ($this->getUserOffice()) {
+            'chairman' => 'pending_chairman',
+            'dean' => 'pending_dean',
+            'sao' => 'pending_sao',
+        };
+    }
+
+
     public function index()
     {
-        $user = auth()->user();
+        $office = $this->getUserOffice();
+        $pendingStatus = $this->getPendingStatus();
 
-        $totalViolations = Violation::when($user->role != 3, function ($query) {
-            return $query->whereDate('created_at', today());
+        $totalViolations = Violation::where(function ($query) use ($pendingStatus, $office) {
+            $query->where('status', $pendingStatus)
+                ->orWhere(function ($query) use ($office) {
+                    $query->whereIn('status', ['dismissed', 'resolved'])
+                        ->where('resolved_by', $office);
+                });
         })->count();
 
-        $pendingReview = Violation::where('status', 'pending')
-            ->when($user->role != 3, function ($query) {
-                return $query->whereDate('created_at', today());
-            })
+        $pendingReview = Violation::where('status', $pendingStatus)
             ->count();
 
         $majorIncidents = Violation::whereHas('offense', function ($query) {
             $query->whereIn('category', ['Serious', 'Very Serious']);
         })
-            ->when($user->role != 3, function ($query) {
-                return $query->whereDate('created_at', today());
-            })
+            ->where('status', $pendingStatus)
             ->count();
-
-        $violations = Violation::with([
-            'student',
-            'cso',
-            'department',
-            'offense',
-            'penalty',
-            'appeals'
-        ])
-            ->latest()
-            ->when($user->role != 3, function ($query) {
-                return $query->whereDate('created_at', today());
-            })
-            ->paginate(10);
 
         return view('sao.violations', compact(
             'totalViolations',
             'pendingReview',
-            'majorIncidents',
-            'violations'
+            'majorIncidents'
         ));
     }
+
 
 
     public function store(Request $request)
@@ -72,7 +79,7 @@ class ViolationController extends Controller
         $alreadyReported = Violation::where('student_id', $student->id)
             ->where('offense_id', $request->offense_id)
             ->whereDate('created_at', today())
-            ->whereIn('status', ['pending', 'resolved'])
+            ->whereIn('status', ['pending_chairman', 'pending_sao', 'pending_dean', 'resolved'])
             ->exists();
 
         if ($alreadyReported) {
@@ -82,7 +89,7 @@ class ViolationController extends Controller
                     'offense_id' => "{$student->name} has already been reported for this offense today.",
                 ]);
         }
-        
+
         $imagePath = null;
 
         if ($request->hasFile('evidence_image')) {
@@ -91,17 +98,29 @@ class ViolationController extends Controller
                 ->store('evidence', 'public');
         }
 
-        $previousViolations = Violation::where('student_id', $student->id)
-            ->where('offense_id', $offense->id)
-            ->whereIn('status', ['pending', 'resolved'])
-            ->count();
+        // $previousViolations = Violation::where('student_id', $student->id)
+        //     ->where('offense_id', $offense->id)
+        //     ->whereIn('status', ['pending_chairman', 'pending_sao', 'pending_dean', 'resolved'])
+        //     ->count();
 
-        $offenseNumber = $previousViolations + 1;
-        $penaltyLevel = min($offenseNumber, 3);
+        // $offenseNumber = $previousViolations + 1;
+        // $penaltyLevel = min($offenseNumber, 3);
 
-        $penalty = $offense->penalties()
-            ->where('level', $penaltyLevel)
-            ->first();
+        // $penalty = $offense->penalties()
+        //     ->where('level', $penaltyLevel)
+        //     ->first();
+
+
+        $user = auth()->user();
+
+        $status = match ($user->role) {
+            2, 3, 7 => 'pending_sao',
+            5 => 'pending_chairman',
+            6 => 'pending_dean',
+
+
+            default => throw new \Exception('Unauthorized role to report a violation.'),
+        };
 
         Violation::create([
             'student_id' => $student->id,
@@ -111,7 +130,7 @@ class ViolationController extends Controller
             // 'penalty_id' => $penalty?->id,
             'description' => $request->description,
             'evidence_image' => $imagePath,
-            'status' => 'pending',
+            'status' => $status,
         ]);
 
         ViolationUpdated::dispatch();
@@ -119,6 +138,50 @@ class ViolationController extends Controller
             'status',
             'Violation has been recorded successfully.'
         );
+    }
+
+    // Chairman forwards to Dean
+    public function forwardToDean(Violation $violation)
+    {
+        if (auth()->user()->role !== 7) {
+            abort(403);
+        }
+
+        if ($violation->status !== 'pending_chairman') {
+            return back()->withErrors([
+                'violation' => 'This violation is not awaiting Chairman review.',
+            ]);
+        }
+
+        $violation->update([
+            'status' => 'pending_dean',
+        ]);
+
+        ViolationUpdated::dispatch();
+
+        return back()->with('success', 'Violation forwarded to the Dean.');
+    }
+
+    // Dean forwards to SAO
+    public function forwardToSao(Violation $violation)
+    {
+        if (auth()->user()->role !== 6) {
+            abort(403);
+        }
+
+        if ($violation->status !== 'pending_dean') {
+            return back()->withErrors([
+                'violation' => 'This violation is not awaiting Dean review.',
+            ]);
+        }
+
+        $violation->update([
+            'status' => 'pending_sao',
+        ]);
+
+        ViolationUpdated::dispatch();
+
+        return back()->with('success', 'Violation forwarded to the SAO.');
     }
 
 
@@ -161,9 +224,15 @@ class ViolationController extends Controller
         ));
     }
 
-
     public function resolve(Request $request, Violation $violation)
     {
+        $office = $this->getUserOffice();
+
+        // if ($violation->status !== 'pending_sao') {
+        //     return back()->withErrors([
+        //         'violation' => 'This violation is not currently awaiting SAO review.',
+        //     ]);
+        // }
 
         $validated = $request->validate([
             'resolution_notes' => [
@@ -198,6 +267,7 @@ class ViolationController extends Controller
 
         $violation->update([
             'status' => 'resolved',
+            'resolved_by' => $office,
             'penalty_id' => $penalty->id,
             'resolution_notes' => $validated['resolution_notes'],
             'resolved_at' => now(),
@@ -223,6 +293,15 @@ class ViolationController extends Controller
 
     public function dismiss(Request $request, Violation $violation)
     {
+        $office = $this->getUserOffice();
+        $expectedStatus = $this->getPendingStatus();
+
+        if ($violation->status !== $expectedStatus) {
+            return back()->withErrors([
+                'violation' => 'This violation has already been processed.',
+            ]);
+        }
+
         $validated = $request->validate([
             'dismissal_reason' => [
                 'required',
@@ -231,14 +310,9 @@ class ViolationController extends Controller
             ],
         ]);
 
-        if ($violation->status !== 'pending') {
-            return back()->withErrors([
-                'violation' => 'This violation has already been processed.',
-            ]);
-        }
-
         $violation->update([
             'status' => 'dismissed',
+            'resolved_by' => $office,
             'penalty_id' => null,
             'resolution_notes' => $validated['dismissal_reason'],
             'resolved_at' => now(),

@@ -19,7 +19,6 @@ class StudentController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Offense number: only resolved violations count toward the history
         $resolvedCounts = [];
 
         foreach ($all as $violation) {
@@ -34,14 +33,14 @@ class StudentController extends Controller
             if ($violation->status === 'resolved') {
                 $resolvedCounts[$id]++;
                 $violation->offense_number = $resolvedCounts[$id];
-            } else { // pending: it would be the next one
+            } else {
                 $violation->offense_number = $resolvedCounts[$id] + 1;
                 $violation->recommended_penalty = $violation->offense?->penalties
                 ->firstWhere('level', min($violation->offense_number, 3));
             }
         }
 
-        $pendingViolations = $all->where('status', 'pending')->sortByDesc('created_at')->values();
+        $pendingViolations = $all->whereIn('status', ['pending_chairman', 'pending_dean', 'pending_sao'])->sortByDesc('created_at')->values();
         $resolvedViolations = $all->where('status', 'resolved')->sortByDesc('created_at')->values();
         $dismissedViolations = $all->where('status', 'dismissed')->sortByDesc('created_at')->values();
 

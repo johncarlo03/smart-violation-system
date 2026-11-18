@@ -17,7 +17,13 @@ class AppealController extends Controller
         }
 
         // Only resolved violations can be appealed
-        if ($violation->status !== 'pending') {
+        if (
+            !in_array($violation->status, [
+                'pending_chairman',
+                'pending_dean',
+                'pending_sao',
+            ])
+        ) {
             return back()->with('error', 'Only pending violations can be appealed.');
         }
 

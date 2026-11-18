@@ -59,30 +59,24 @@
                     </div>
 
                     <span class="px-4 py-2 rounded-full text-xs font-black uppercase
-                        {{ $violation->status === 'pending'
+                        {{ $violation->status === 'pending_sao'
     ? 'bg-orange-100 text-orange-700'
     : ($violation->status === 'resolved'
         ? 'bg-green-100 text-green-700'
         : 'bg-red-100 text-red-700') }}">
-
                         {{ $violation->status }}
-
                     </span>
-
                 </div>
-
             </div>
 
 
             {{-- STUDENT INFORMATION --}}
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-
                 <h3 class="text-lg font-bold text-gray-800 mb-5">
                     Student Information
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
                     <div>
                         <p class="text-xs font-bold uppercase text-gray-400">
                             Student Name
@@ -194,8 +188,13 @@
             @endif
 
             {{-- STUDENT APPEAL --}}
-            @if($violation->status === 'pending')
-
+            @if(
+                    in_array($violation->status, [
+                        'pending_chairman',
+                        'pending_dean',
+                        'pending_sao',
+                    ])
+                )
                 @php
                     $appeal = $violation->appeals
                         ->sortByDesc('created_at')
@@ -203,23 +202,19 @@
                 @endphp
 
                 @if($appeal)
-
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-
                         <div class="flex items-start justify-between gap-4 mb-5">
-
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800">
                                     Student Appeal
                                 </h3>
-
                                 <p class="text-sm text-gray-500 mt-1">
                                     Review the student's appeal before taking action on this violation.
                                 </p>
                             </div>
 
                             <span class="px-3 py-1.5 rounded-full text-xs font-black uppercase
-                                                                                                                                                                                                            {{ $appeal->status === 'pending'
+                                                    {{ $appeal->status === 'pending'
                     ? 'bg-orange-100 text-orange-700'
                     : ($appeal->status === 'approved'
                         ? 'bg-green-100 text-green-700'
@@ -270,14 +265,12 @@
                         @if($appeal->evidence_image)
 
                             <div class="mt-5">
-
                                 <p class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                                     Supporting Evidence
                                 </p>
 
                                 <img src="{{ asset('storage/' . $appeal->evidence_image) }}" alt="Appeal supporting evidence"
                                     class="max-w-xl w-full rounded-xl border border-gray-200 shadow-sm">
-
                             </div>
 
                         @endif
@@ -289,7 +282,13 @@
             @endif
 
             {{-- PENDING VIOLATION --}}
-            @if($violation->status === 'pending')
+            @if(
+                    in_array($violation->status, [
+                        'pending_chairman',
+                        'pending_dean',
+                        'pending_sao',
+                    ])
+                )
                 {{-- RECOMMENDED PENALTY --}}
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-2">
@@ -327,8 +326,13 @@
                 </div>
 
                 {{-- ACTION SELECTION --}}
-                @if($violation->status === 'pending')
-
+                @if(
+                        in_array($violation->status, [
+                            'pending_chairman',
+                            'pending_dean',
+                            'pending_sao',
+                        ])
+                    )
                     <div x-data="{ action: '' }" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
                         <h3 class="text-lg font-bold text-gray-800 mb-2">
@@ -345,8 +349,8 @@
                             {{-- RESOLVE --}}
                             <button type="button" @click="action = 'resolve'"
                                 :class="action === 'resolve'
-                                                                                                                                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
-                                                                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                                                                                                                                                                    ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
+                                                                                                                                                                                    : 'border-gray-200 hover:bg-gray-50'"
                                 class="p-5 border rounded-xl text-left transition">
                                 <div class="flex items-center gap-3">
 
@@ -395,13 +399,14 @@
                             {{-- DISMISS --}}
                             <button type="button" @click="action = 'dismiss'"
                                 :class="action === 'dismiss'
-                                                                                                                                                            ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
-                                                                                                                                                            : 'border-gray-200 hover:bg-gray-50'"
+                                                                                                                                                                                    ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
+                                                                                                                                                                                    : 'border-gray-200 hover:bg-gray-50'"
                                 class="p-5 border rounded-xl text-left transition">
                                 <div class="flex items-center gap-3">
 
                                     @if($latestAppeal && $latestAppeal->status === 'pending')
-                                        <div class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M6 18L18 6M6 6l12 12" />
@@ -437,10 +442,8 @@
                                             </p>
                                         @endif
                                     </div>
-
                                 </div>
                             </button>
-
                         </div>
 
 
@@ -531,7 +534,6 @@
                                         placeholder="Explain why this violation is being dismissed...">{{ old('dismissal_reason') }}</textarea>
 
                                 </div>
-
                                 <x-danger-button type="submit">
                                     @if($appealPending)
                                         Accept Appeal & Dismiss
@@ -539,11 +541,8 @@
                                         Dismiss Violation
                                     @endif
                                 </x-danger-button>
-
                             </form>
-
                         </div>
-
                     </div>
 
                 @endif

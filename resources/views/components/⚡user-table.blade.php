@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Models\User;
@@ -20,17 +21,42 @@ new class extends Component {
     #[Computed]
     public function users()
     {
-        return User::where(function($query) {
-            $query->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('id_number', 'like', '%' . $this->search . '%')
-                  ->orWhere('rfid_number', 'like', '%' . $this->search . '%');
-        })
-        ->orderByRaw("FIELD(role, '4', '3', '2', '1') ASC")
-        ->paginate(10);
+        $search = trim($this->search);
+
+        return User::query()
+            ->select([
+                'id',
+                'name',
+                'email',
+                'id_number',
+                'rfid_number',
+                'role',
+                'department_id',
+                'course_id',
+                'year_level',
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'ilike', "%{$search}%")
+                        ->orWhere('email', 'ilike', "%{$search}%")
+                        ->orWhere('id_number', 'ilike', "%{$search}%")
+                        ->orWhere('rfid_number', 'ilike', "%{$search}%");
+                });
+            })
+            ->orderByRaw("
+                CASE role
+                    WHEN 4 THEN 1
+                    WHEN 3 THEN 2
+                    WHEN 2 THEN 3
+                    WHEN 1 THEN 4
+                    ELSE 5
+                END ASC
+            ")
+            ->paginate(10);
     }
 };
 ?>
+
 
 <div>
     {{-- Search Bar --}}

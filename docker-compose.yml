@@ -1,0 +1,36 @@
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_REVERB_APP_KEY: "smart-violation-key"
+        VITE_REVERB_HOST: "localhost"
+        VITE_REVERB_PORT: "10000"
+        VITE_REVERB_SCHEME: "http"
+    container_name: laravel-app
+    ports:
+      - "10000:10000"
+    env_file:
+      - .env.docker
+    environment:
+      PORT: 10000
+    restart: unless-stopped
+
+  reverb:
+    build: .
+    container_name: laravel-reverb
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.docker
+    restart: unless-stopped
+
+  queue:
+    build: .
+    container_name: laravel-queue
+    command: php artisan queue:work --tries=3
+    env_file:
+      - .env.docker
+    restart: unless-stopped

@@ -189,7 +189,7 @@ nav[role="navigation"] span.text-gray-400 {
                                 User Roles
                             </label>
 
-                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-7 gap-4">
                                 <label
                                     class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
                                     <div class="flex items-center h-5">
@@ -212,6 +212,32 @@ nav[role="navigation"] span.text-gray-400 {
                                         <span
                                             class="block text-xs font-black uppercase tracking-wider text-orange-600">CSO
                                             Officer</span>
+                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
+                                            & data</span>
+                                    </div>
+                                </label>
+
+                                <label
+                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" name="role" value="6" {{ old('role') == '6' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    </div>
+                                    <div class="ml-3">
+                                        <span
+                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Chairman</span>
+                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
+                                            & data</span>
+                                    </div>
+                                </label>
+
+                                <label
+                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
+                                    <div class="flex items-center h-5">
+                                        <input type="radio" name="role" value="7" {{ old('role') == '7' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                    </div>
+                                    <div class="ml-3">
+                                        <span
+                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Dean</span>
                                         <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
                                             & data</span>
                                     </div>
@@ -369,7 +395,7 @@ nav[role="navigation"] span.text-gray-400 {
     function toggleRoleFields(roleValue) {
         const extra = document.getElementById('student-extra-fields');
         const isStudent = roleValue == '1';
-        const needsDepartment = isStudent || roleValue == '5';
+        const needsDepartment = isStudent || ['1', '5', '6', '7'].includes(String(roleValue));
 
         studentFields.classList.toggle('hidden', !needsDepartment);
         extra.classList.toggle('hidden', !isStudent);
@@ -474,7 +500,7 @@ department.addEventListener('change', function () {
                 });
 
                 // 5. Build dropdown selections out if student layout tier applies
-                if (data.role == '1' || data.role == '5') {
+                if (['1', '5', '6', '7'].includes(String(data.role))) {
                     department.value = data.department_id;
                 }
 

@@ -44,7 +44,7 @@ class UsersCreationController extends Controller
             'email' => 'required|email|unique:users,email',
             'id_number' => 'required|string|unique:users,id_number',
             'password' => 'required|confirmed|min:8',
-            'role' => ['required', Rule::in(['1', '2', '3', '4', '5'])],
+            'role' => ['required', Rule::in(['1', '2', '3', '4', '5', '6', '7'])],
             'department_id' => ['nullable', 'required_if:role,1,5', 'exists:departments,id'],
             'course_id' => ['nullable', 'required_if:role,1', 'exists:courses,id'],
             'year_level' => ['nullable', 'required_if:role,1', Rule::in(['1', '2', '3', '4'])],
@@ -111,7 +111,7 @@ class UsersCreationController extends Controller
             ],
             'role' => 'required|string',
 
-            'department_id' => ['nullable', 'required_if:role,1,5', 'exists:departments,id'],
+            'department_id' => ['nullable', 'required_if:role,1,5,6,7', 'exists:departments,id'],
             'course_id'     => ['nullable', 'required_if:role,1', 'exists:courses,id'],
             'year_level'    => ['nullable', 'required_if:role,1', Rule::in(['1', '2', '3', '4'])],
 

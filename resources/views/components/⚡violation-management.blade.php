@@ -9,27 +9,65 @@ use Illuminate\Database\Eloquent\Builder;
 
 new class extends Component {
 
+    private function getUserOffice(): string
+    {
+        return match ((int) auth()->user()->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => abort(403, 'Unauthorized access.'),
+        };
+    }
+
+    private function getPendingStatus(): string
+    {
+        return match ($this->getUserOffice()) {
+            'chairman' => 'pending_chairman',
+            'dean' => 'pending_dean',
+            'sao' => 'pending_sao',
+        };
+    }
+
+
+    #[Computed]
+    public function summaryStats()
+    {
+        return $this->inPeriod()
+            ->leftJoin('offenses', 'violations.offense_id', '=', 'offenses.id')
+            ->selectRaw('
+            COUNT(violations.id) AS total,
+            COUNT(violations.id) FILTER (
+                WHERE violations.status = ?
+            ) AS pending,
+            COUNT(violations.id) FILTER (
+                WHERE offenses.category IN (?, ?)
+            ) AS major
+        ', [
+                $this->getPendingStatus(),
+                'Serious',
+                'Very Serious',
+            ])
+            ->first();
+    }
+
     #[Computed]
     public function totalViolations()
     {
-        return $this->inPeriod()->where('status', '!=', 'void')->count();
+        return $this->summaryStats->total;
     }
 
     #[Computed]
     public function pendingReview()
     {
-        return $this->inPeriod()->where('status', 'pending')->count();
+        return $this->summaryStats->pending;
     }
 
     #[Computed]
     public function majorIncidents()
     {
-        return $this->inPeriod()->whereHas(
-            'offense',
-            fn($q) =>
-                $q->whereIn('category', ['Serious', 'Very Serious'])
-        )->where('status', '!=', 'void')->count();
+        return $this->summaryStats->major;
     }
+
 
     #[On('echo:violations,ViolationUpdated')]
     public function refreshViolations()
@@ -37,34 +75,62 @@ new class extends Component {
         // The computed properties will be re-evaluated
     }
 
+
     #[Computed]
     public function topOffenses()
     {
-        return $this->inPeriod()->selectRaw('offense_id, count(*) as total')
-            ->where('status', '!=', 'void')
-            ->with('offense')
-            ->groupBy('offense_id')
+        return $this->inPeriod()
+            ->join('offenses', 'violations.offense_id', '=', 'offenses.id')
+            ->selectRaw('
+            violations.offense_id,
+            offenses.name as offense_name,
+            COUNT(violations.id) as total
+        ')
+            ->where('violations.status', '!=', 'void')
+            ->groupBy('violations.offense_id', 'offenses.name')
             ->orderByDesc('total')
             ->limit(5)
             ->get();
     }
 
+
     #[Computed]
     public function deptStats()
     {
+        $office = $this->getUserOffice();
+        $pendingStatus = $this->getPendingStatus();
+
         return Department::withCount([
-            'violations as total' => fn ($q) => $q
-                ->where('status', '!=', 'void')
-                ->when($this->periodStart, fn ($q, $start) => $q->where('violations.created_at', '>=', $start)),
+            'violations as total' => function ($query) use ($office, $pendingStatus) {
+
+                $query->where(function ($q) use ($office, $pendingStatus) {
+                    $q->where('status', $pendingStatus)
+                        ->orWhere(function ($q) use ($office) {
+                            $q->whereIn('status', ['dismissed', 'resolved'])
+                                ->where('resolved_by', $office);
+                        });
+                })
+                    ->when(
+                        $this->periodStart,
+                        fn($q, $start) => $q->where(
+                            'violations.created_at',
+                            '>=',
+                            $start
+                        )
+                    );
+            },
         ])->get()->map(function ($d) {
+
             $colors = [
                 1 => 'from-red-400 to-red-600',
                 2 => 'from-blue-400 to-blue-600',
                 3 => 'from-green-400 to-green-600',
                 4 => 'from-yellow-400 to-yellow-500',
             ];
+
             $d->barColor = $colors[$d->id] ?? 'from-gray-400 to-gray-600';
             $d->acronym = $d->acronym ?? 'N/A';
+
             return $d;
         });
     }
@@ -72,7 +138,13 @@ new class extends Component {
     #[Computed]
     public function violations()
     {
-        return Violation::with(['student', 'cso', 'department', 'offense'])
+        return $this->inPeriod()
+            ->with([
+                'student',
+                'cso',
+                'department',
+                'offense',
+            ])
             ->latest()
             ->take(5)
             ->get();
@@ -92,10 +164,10 @@ new class extends Component {
     public function periodStart()
     {
         return match ($this->period) {
-            'day'   => now()->startOfDay(),
-            'week'  => now()->startOfWeek(),
-            'year'  => now()->startOfYear(),
-            'all'   => null,
+            'day' => now()->startOfDay(),
+            'week' => now()->startOfWeek(),
+            'year' => now()->startOfYear(),
+            'all' => null,
             default => now()->startOfMonth(),
         };
     }
@@ -104,38 +176,54 @@ new class extends Component {
     public function periodLabel(): string
     {
         return match ($this->period) {
-            'day'   => 'Today',
-            'week'  => 'This week',
-            'year'  => 'This year',
-            'all'   => 'All time',
+            'day' => 'Today',
+            'week' => 'This week',
+            'year' => 'This year',
+            'all' => 'All time',
             default => 'This month',
         };
     }
 
+
     private function inPeriod(): Builder
     {
+        $office = $this->getUserOffice();
+        $pendingStatus = $this->getPendingStatus();
+
         return Violation::query()
-            ->when($this->periodStart, fn ($q, $start) => $q->where('created_at', '>=', $start));
+            ->where(function ($query) use ($office, $pendingStatus) {
+                $query->where('violations.status', $pendingStatus)
+                    ->orWhere(function ($query) use ($office) {
+                        $query->whereIn('violations.status', ['dismissed', 'resolved'])
+                            ->where('violations.resolved_by', $office);
+                    });
+            })
+            ->when(
+                $this->periodStart,
+                fn($q, $start) => $q->where('violations.created_at', '>=', $start)
+            );
     }
+
 };
 ?>
 
 <div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-    <p class="text-sm text-gray-500">
-        Showing <span class="font-semibold text-gray-800">{{ $this->periodLabel }}</span>
-    </p>
+        <p class="text-sm text-gray-500">
+            Showing <span class="font-semibold text-gray-800">{{ $this->periodLabel }}</span>
+        </p>
 
-    <div class="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm" role="group" aria-label="Time period">
-        @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
-            <button type="button" wire:click="setPeriod('{{ $key }}')"
-                class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                    {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
-                {{ $label }}
-            </button>
-        @endforeach
+        <div class="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm" role="group"
+            aria-label="Time period">
+            @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
+                <button type="button" wire:click="setPeriod('{{ $key }}')"
+                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
+                                                    {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ $label }}
+                </button>
+            @endforeach
+        </div>
     </div>
-</div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:shadow-xl transition duration-300">
             <div class="flex items-center justify-between">
@@ -191,7 +279,7 @@ new class extends Component {
                 @forelse($this->topOffenses as $item)
                     <div>
                         <div class="flex justify-between text-sm mb-2">
-                            <span class="font-semibold text-gray-700">{{ $item->offense->name ?? 'Unknown' }}</span>
+                            <span class="font-semibold text-gray-700">{{ $item->offense_name ?? 'Unknown' }}</span>
                             <span class="font-black text-indigo-600">{{ $item->total }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-2.5">
@@ -246,55 +334,59 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($this->violations as $v)
-                        <tr class="hover:bg-indigo-50/40 transition duration-200">
-                            <td class="px-6 py-5">
-                                <div class="flex items-center gap-4">
-                                    @if($v->student->profile_photo)
-                                        <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
-                                            class="w-12 h-12 rounded-full object-cover shadow-sm">
-                                    @else
-                                        <div
-                                            class="w-12 h-12 rounded-full {{ $v->department->badgeColor ?? 'bg-gray-100' }} flex items-center justify-center font-black text-sm shadow-sm">
-                                            {{ strtoupper(substr($v->student->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <div class="font-bold text-gray-900">{{ $v->student->name }}</div>
-                                        <div class="text-xs text-gray-500 mt-1">{{ $v->department->acronym ?? 'N/A' }} •
-                                            {{ $v->student->id_number }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-5">
-                                <div class="font-bold text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
-                                <div
-                                    class="inline-flex mt-2 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-black tracking-wider">
-                                    {{ $v->offense->category ?? '' }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
-                            <td class="px-6 py-5 text-center">
-                                <span
-                                    class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                        {{ $v->status === 'pending' ? 'bg-orange-100 text-orange-700' : ($v->status === 'resolved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700') }}">
-                                    {{ $v->status }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 text-right">
-                                <div class="flex justify-end gap-2">
-                                    @if($v->evidence_image)
-                                        <button onclick="openEvidenceModal('{{ $v->evidence_image }}')"
-                                            class="inline-flex items-center px-3 py-2 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200 transition">
-                                            View Photo
-                                        </button>
-                                    @endif
-                                    <a href="{{ route('violations.manage', $v->id) }}"
-                                        class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
-                                        Manage
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                                    <tr class="hover:bg-indigo-50/40 transition duration-200">
+                                        <td class="px-6 py-5">
+                                            <div class="flex items-center gap-4">
+                                                @if($v->student->profile_photo)
+                                                    <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
+                                                        class="w-12 h-12 rounded-full object-cover shadow-sm">
+                                                @else
+                                                    <div
+                                                        class="w-12 h-12 rounded-full {{ $v->department->badgeColor ?? 'bg-gray-100' }} flex items-center justify-center font-black text-sm shadow-sm">
+                                                        {{ strtoupper(substr($v->student->name, 0, 1)) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <div class="font-bold text-gray-900">{{ $v->student->name }}</div>
+                                                    <div class="text-xs text-gray-500 mt-1">{{ $v->department->acronym ?? 'N/A' }} •
+                                                        {{ $v->student->id_number }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5">
+                                            <div class="font-bold text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
+                                            <div
+                                                class="inline-flex mt-2 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-black tracking-wider">
+                                                {{ $v->offense->category ?? '' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
+                                        <td class="px-6 py-5 text-center">
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
+                                                                                    {{ str_starts_with($v->status, 'pending_')
+                        ? 'bg-orange-100 text-orange-700'
+                        : ($v->status === 'resolved'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700') }}">
+                                                {{ $v->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-5 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                @if($v->evidence_image)
+                                                    <button onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                                        class="inline-flex items-center px-3 py-2 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200 transition">
+                                                        View Photo
+                                                    </button>
+                                                @endif
+                                                <a href="{{ route('violations.manage', $v->uuid) }}"
+                                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
+                                                    Manage
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="px-4 py-20 text-center">

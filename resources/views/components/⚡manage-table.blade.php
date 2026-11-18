@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Models\Violation;
@@ -28,62 +29,94 @@ new class extends Component
     #[Computed]
     public function violations()
     {
-        return Violation::with([
-            'student',
-            'department',
-            'offense',
-            'cso',
-        ])
-        ->where(function ($query) {
-            $query->whereHas('student', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%')
-                  ->orWhere('id_number', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('rfid_number', 'like', '%' . $this->search . '%');
-            })
-            ->orWhere('status', 'like', '%' . $this->search . '%')
-            ->orWhereHas('offense', function ($q) {
-                $q->where('name', 'like', '%' . $this->search . '%');
-            });
-        })
-        ->when($this->statusFilter !== '', function ($query) {
-    if ($this->statusFilter === 'appealed') {
-        $query->whereHas('appeals', function ($q) {
-            $q->where('status', 'pending');
+        $user = auth()->user();
+
+        $office = match ((int) $user->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => null,
+        };
+
+        $pendingStatus = match ($office) {
+            'chairman' => 'pending_chairman',
+            'dean' => 'pending_dean',
+            'sao' => 'pending_sao',
+            default => null,
+        };
+
+        $query = Violation::with([
+    'student',
+    'department',
+    'offense',
+    'cso',
+])->withExists([
+    'appeals as has_pending_appeal' => fn ($q) => $q->where('status', 'pending'),
+]);
+
+        // Reject users without reviewer roles.
+        if (!$office) {
+            return $query->whereRaw('1 = 0')->simplePaginate(10);
+        }
+
+        // Current office's pending violations and
+        // violations finalized by this office.
+        $query->where(function ($q) use ($pendingStatus, $office) {
+            $q->where('status', $pendingStatus)
+                ->orWhere(function ($q) use ($office) {
+                    $q->whereIn('status', ['resolved', 'dismissed'])
+                        ->where('resolved_by', $office);
+                });
         });
-    } else {
-        $query->where('status', $this->statusFilter);
-    }
-})
-->orderByRaw("
-    CASE
-        WHEN status = 'pending' THEN 1
-        WHEN EXISTS (
-            SELECT 1
-            FROM appeals
-            WHERE appeals.violation_id = violations.id
-            AND appeals.status = 'pending'
-        ) THEN 2
-        WHEN status = 'resolved' THEN 3
-        WHEN status = 'dismissed' THEN 4
-        ELSE 5
-    END
-")
-->orderBy('created_at', 'desc')
-->orderBy('id', 'desc')
-->paginate(10);
+
+        // Search only when there is an actual search term.
+        $query->when(filled($this->search), function ($query) {
+            $search = '%' . trim($this->search) . '%';
+
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('student', function ($studentQuery) use ($search) {
+                    $studentQuery->where('name', 'ilike', $search)
+                        ->orWhere('id_number', 'ilike', $search)
+                        ->orWhere('email', 'ilike', $search)
+                        ->orWhere('rfid_number', 'ilike', $search);
+                })
+                ->orWhere('status', 'ilike', $search)
+                ->orWhereHas('offense', function ($offenseQuery) use ($search) {
+                    $offenseQuery->where('name', 'ilike', $search);
+                });
+            });
+        });
+
+        // Status filter.
+        $query->when($this->statusFilter !== '', function ($q) use ($pendingStatus) {
+            if ($this->statusFilter === 'pending') {
+                $q->where('status', $pendingStatus);
+            } elseif ($this->statusFilter === 'appealed') {
+                $q->whereHas('appeals', function ($appealQuery) {
+                    $appealQuery->where('status', 'pending');
+                });
+            } else {
+                $q->where('status', $this->statusFilter);
+            }
+        });
+
+        return $query
+    ->orderByDesc('has_pending_appeal')
+    ->orderByDesc('created_at')
+    ->orderByDesc('id')
+    ->simplePaginate(10);
     }
 };
 ?>
 
+
 <div>
     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
     <div class="flex flex-col md:flex-row gap-3">
-
         <div class="flex-1">
             <input
                 type="text"
-                wire:model.live.debounce.300ms="search"
+                wire:model.live.debounce.600ms="search"
                 placeholder="Search by name, email, ID, or RFID..."
                 class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             >
@@ -105,7 +138,8 @@ new class extends Component
 </div>
 
     {{-- Table --}}
-    <div class="hidden md:block overflow-x-auto">
+    <div wire:loading.class="opacity-50 pointer-events-none"
+     class="hidden md:block overflow-x-auto transition-opacity">
         <table class="w-full text-left border-collapse">
 
             <thead>
@@ -163,13 +197,7 @@ new class extends Component
 
                         
                         <td class="px-6 py-5 text-center">
-                            @php
-                                $pendingAppeal = $v->appeals
-                                    ->where('status', 'pending')
-                                    ->first();
-                            @endphp
-
-                            @if($pendingAppeal)
+                            @if($v->has_pending_appeal)
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full
                                             text-xs font-bold bg-orange-100 text-orange-700">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,15 +206,17 @@ new class extends Component
                                     </svg>
                                     Appealed
                                 </span>
-                            @elseif($v->status === 'pending')
-                                <span class="px-3 py-1 rounded-full text-xs font-bold
-                                            bg-yellow-100 text-yellow-700">
+                            @elseif(in_array($v->status, [
+                                'pending_chairman',
+                                'pending_dean',
+                                'pending_sao',
+                            ]))
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
                                     Pending
                                 </span>
-
                             @elseif($v->status === 'resolved')
                                 <span class="px-3 py-1 rounded-full text-xs font-bold
-                                            bg-blue-100 text-blue-700">
+                                            bg-green-100 text-green-700">
                                     Resolved
                                 </span>
 
@@ -210,28 +240,24 @@ new class extends Component
                                     </button>
                                 @endif
                                 @if(auth()->user()->role == 2)
-
-    <span
-        class="inline-flex items-center px-4 py-2
-               bg-indigo-600 text-white text-xs font-bold
-               rounded-lg shadow-sm opacity-40
-               cursor-not-allowed"
-    >
-        Manage
-    </span>
-
-@else
-
-    <a
-        href="{{ route('violations.manage', $v->id) }}"
-        class="inline-flex items-center px-4 py-2
-               bg-indigo-600 text-white text-xs font-bold
-               rounded-lg shadow-sm hover:bg-indigo-700 transition"
-    >
-        Manage
-    </a>
-
-@endif
+                                    <span
+                                        class="inline-flex items-center px-4 py-2
+                                            bg-indigo-600 text-white text-xs font-bold
+                                            rounded-lg shadow-sm opacity-40
+                                            cursor-not-allowed"
+                                    >
+                                        Manage
+                                    </span>
+                                @else
+                                <a
+                                    href="{{ route('violations.manage', ['violation' => $v->uuid]) }}"
+                                    class="inline-flex items-center px-4 py-2
+                                        bg-indigo-600 text-white text-xs font-bold
+                                        rounded-lg shadow-sm hover:bg-indigo-700 transition"
+                                >
+                                    Manage
+                                </a>
+                                @endif
                             </div>
                         </td>
                     </tr>

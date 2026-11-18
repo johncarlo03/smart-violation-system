@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\OffensePenalty;
 use App\Models\Appeal;
 use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Support\Str;
 
 
 class Violation extends Model implements Auditable
 {
-        use \OwenIt\Auditing\Auditable;
+    use \OwenIt\Auditing\Auditable;
     protected $fillable = [
         'student_id',
         'offense_id',
@@ -22,6 +23,7 @@ class Violation extends Model implements Auditable
         'status',
         'resolution_notes',
         'resolved_at',
+        'resolved_by',
     ];
 
     protected $casts = [
@@ -61,5 +63,12 @@ class Violation extends Model implements Auditable
     public function appeals()
     {
         return $this->hasMany(Appeal::class);
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($violation) {
+            $violation->uuid ??= (string) Str::uuid();
+        });
     }
 }

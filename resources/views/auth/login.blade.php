@@ -45,8 +45,7 @@
 
 <body
     class="font-sans antialiased text-gray-800 bg-gray-900 min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative px-4 py-8 sm:py-12"
-    style="background-image: url('{{ asset('images/campus.jpg') }}');"
-    x-data="{ 
+    style="background-image: url('{{ asset('images/campus.jpg') }}');" x-data="{ 
         isRegister: {{ $errors->any() && old('name') ? 'true' : 'false' }},
         showPassword: false,
         showConfirmPassword: false
@@ -56,7 +55,8 @@
     <div class="absolute inset-0 bg-gray-900/90"></div>
 
     <!-- Main Auth Container -->
-    <div class="relative z-10 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row sm:h-[680px]">
+    <div
+        class="relative z-10 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col sm:flex-row sm:h-[680px]">
 
         <!-- MOBILE SWITCHER HEADER (Visible only on small screens) -->
         <div class="sm:hidden bg-gradient-to-r from-red-600 to-red-900 p-6 text-white text-center shrink-0">
@@ -67,7 +67,7 @@
             </div>
             <h1 class="text-xl font-extrabold tracking-tight">CTU Smart Violation Portal</h1>
             <p class="text-red-100 text-xs mt-1">Manage and track campus records securely.</p>
-            
+
             <!-- Tab Switcher for Mobile -->
             <div class="flex bg-black/20 p-1 rounded-xl mt-4">
                 <button type="button" @click="isRegister = false"
@@ -85,7 +85,7 @@
 
         <!-- 1. LEFT SIDE (Desktop): Register Form -->
         <div class="w-full sm:w-1/2 flex-col justify-between p-6 sm:p-10 bg-grid-pattern max-h-[75vh] sm:max-h-none"
-             :class="isRegister ? 'flex' : 'hidden sm:flex'">
+            :class="isRegister ? 'flex' : 'hidden sm:flex'">
 
             <div class="w-full max-w-sm mx-auto my-auto py-2">
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">Create Account</h2>
@@ -102,14 +102,17 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('register') }}" class="space-y-3">
+                <form method="POST" action="{{ route('register') }}" class="space-y-3" x-data="{ submitting: false }"
+                    @submit="if (submitting) { $event.preventDefault(); } else { submitting = true; }">
                     @csrf
 
                     <!-- Name Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                         </div>
                         <input id="register_name" type="text" name="name" value="{{ old('name') }}" required
@@ -120,11 +123,15 @@
                     <!-- ID Number -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2">
+                                </path>
                             </svg>
                         </div>
-                        <input id="register_id_number" type="text" name="id_number" value="{{ old('id_number') }}" required
+                        <input id="register_id_number" type="text" name="id_number" value="{{ old('id_number') }}"
+                            required
                             class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-xs sm:text-sm"
                             placeholder="Student ID Number">
                     </div>
@@ -147,7 +154,8 @@
                             class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-xs sm:text-sm text-gray-700 disabled:bg-gray-100 disabled:text-gray-400">
                             <option value="" x-text="dept ? 'Select Course' : 'Select Department First'"></option>
                             <template x-for="c in (courses[dept] || [])" :key="c.id">
-                                <option :value="c.id" x-text="c.name" :selected="String(c.id) === String(course)"></option>
+                                <option :value="c.id" x-text="c.name" :selected="String(c.id) === String(course)">
+                                </option>
                             </template>
                         </select>
 
@@ -155,7 +163,8 @@
                             class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-xs sm:text-sm text-gray-700">
                             <option value="">Select Year Level</option>
                             @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
-                                <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>{{ $label }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -163,8 +172,11 @@
                     <!-- Email Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207">
+                                </path>
                             </svg>
                         </div>
                         <input id="register_email" type="email" name="email" value="{{ old('email') }}" required
@@ -175,22 +187,32 @@
                     <!-- Password Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
                             </svg>
                         </div>
-                        <input id="register_password" :type="showPassword ? 'text' : 'password'" name="password" required
+                        <input id="register_password" :type="showPassword ? 'text' : 'password'" name="password"
+                            required
                             class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-xs sm:text-sm"
                             placeholder="Password">
 
                         <button type="button" @click="showPassword = !showPassword"
                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-600 transition-colors"
                             :aria-label="showPassword ? 'Hide password' : 'Show password'">
-                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
                             </svg>
-                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102"></path>
+                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
                             </svg>
                         </button>
                     </div>
@@ -198,22 +220,32 @@
                     <!-- Confirm Password Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
                             </svg>
                         </div>
-                        <input id="register_password_confirmation" :type="showConfirmPassword ? 'text' : 'password'" name="password_confirmation" required
+                        <input id="register_password_confirmation" :type="showConfirmPassword ? 'text' : 'password'"
+                            name="password_confirmation" required
                             class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-600 focus:border-red-600 transition-all bg-white shadow-sm text-xs sm:text-sm"
                             placeholder="Confirm Password">
 
                         <button type="button" @click="showConfirmPassword = !showConfirmPassword"
                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-600 transition-colors"
                             :aria-label="showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'">
-                            <svg x-show="!showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            <svg x-show="!showConfirmPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
                             </svg>
-                            <svg x-show="showConfirmPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102"></path>
+                            <svg x-show="showConfirmPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
                             </svg>
                         </button>
                     </div>
@@ -225,9 +257,11 @@
                 </form>
 
                 <div class="mt-4 text-center">
-                    <a href="/" class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
+                    <a href="/"
+                        class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         Back to Home
                     </a>
@@ -237,7 +271,7 @@
 
         <!-- 2. RIGHT SIDE (Desktop): Login Form -->
         <div class="w-full sm:w-1/2 flex-col justify-between p-6 sm:p-10 bg-grid-pattern overflow-y-auto max-h-[75vh] sm:max-h-none"
-             :class="!isRegister ? 'flex' : 'hidden sm:flex'">
+            :class="!isRegister ? 'flex' : 'hidden sm:flex'">
 
             <div class="w-full max-w-sm mx-auto my-auto py-2">
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-1">Welcome Back</h2>
@@ -254,14 +288,18 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                <form method="POST" action="{{ route('login') }}" class="space-y-4" x-data="{ submitting: false }"
+                    @submit="if (submitting) { $event.preventDefault(); } else { submitting = true; }">
                     @csrf
 
                     <!-- Email Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207">
+                                </path>
                             </svg>
                         </div>
                         <input id="login_email" type="email" name="email" value="{{ old('email') }}" required autofocus
@@ -272,8 +310,11 @@
                     <!-- Password Input -->
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            <svg class="h-4 w-4 text-gray-400 group-focus-within:text-red-600 transition-colors"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
                             </svg>
                         </div>
                         <input id="login_password" :type="showPassword ? 'text' : 'password'" name="password" required
@@ -283,34 +324,46 @@
                         <button type="button" @click="showPassword = !showPassword"
                             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-600 transition-colors"
                             :aria-label="showPassword ? 'Hide password' : 'Show password'">
-                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            <svg x-show="!showPassword" class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
                             </svg>
-                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102"></path>
+                            <svg x-show="showPassword" x-cloak class="h-5 w-5" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 3l18 18M10.584 10.587a2 2 0 002.828 2.828 M9.88 5.09A10.94 10.94 0 0112 4.875c4.478 0 8.268 2.943 9.542 7 M6.228 6.228A10.97 10.97 0 002.458 12c1.274 4.057 5.064 7 9.542 7 1.61 0 3.13-.398 4.464-1.102">
+                                </path>
                             </svg>
                         </button>
                     </div>
 
                     <div class="flex items-center justify-between text-xs sm:text-sm mt-2">
                         <label class="flex items-center text-gray-600 cursor-pointer">
-                            <input type="checkbox" name="remember" class="mr-2 rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4"> Remember me
+                            <input type="checkbox" name="remember"
+                                class="mr-2 rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4"> Remember
+                            me
                         </label>
                         @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}" class="font-semibold text-red-600 hover:text-red-800 transition">Forgot password?</a>
+                            <a href="{{ route('password.request') }}"
+                                class="font-semibold text-red-600 hover:text-red-800 transition">Forgot password?</a>
                         @endif
                     </div>
 
-                    <button type="submit"
-                        class="w-full py-3 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow transition-all text-xs sm:text-sm">
-                        Sign In
+                    <button type="submit" :disabled="submitting"
+                        class="w-full py-3 mt-2 bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white font-bold rounded-xl shadow transition-all text-xs sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed">
+                        <span x-show="!submitting">Sign In</span>
+                        <span x-show="submitting" x-cloak>Signing In...</span>
                     </button>
                 </form>
 
                 <div class="mt-6 text-center">
-                    <a href="/" class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
+                    <a href="/"
+                        class="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-red-700 transition-colors font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
                         Back to Home
                     </a>
@@ -336,7 +389,8 @@
                 <!-- Login mode -->
                 <div x-show="!isRegister" class="space-y-6 w-full max-w-[280px]">
                     <h2 class="text-3xl font-extrabold tracking-tight">New Here?</h2>
-                    <p class="text-red-100 text-sm leading-relaxed">Create an account to start reporting and tracking violations seamlessly.</p>
+                    <p class="text-red-100 text-sm leading-relaxed">Create an account to start reporting and tracking
+                        violations seamlessly.</p>
                     <button type="button" @click="isRegister = true"
                         class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all cursor-pointer">
                         Create Account
@@ -346,7 +400,8 @@
                 <!-- Register mode -->
                 <div x-show="isRegister" x-cloak class="space-y-6 w-full max-w-[280px]">
                     <h2 class="text-3xl font-extrabold tracking-tight">Welcome Back!</h2>
-                    <p class="text-red-100 text-sm leading-relaxed">Already part of the system? Log in to access your dashboard and records.</p>
+                    <p class="text-red-100 text-sm leading-relaxed">Already part of the system? Log in to access your
+                        dashboard and records.</p>
                     <button type="button" @click="isRegister = false"
                         class="w-full py-3 px-8 border-2 border-white/50 rounded-xl font-bold hover:bg-white hover:text-red-700 hover:border-white transition-all cursor-pointer">
                         Sign In

@@ -4,9 +4,9 @@ services:
     build:
       context: .
       args:
-        VITE_REVERB_APP_KEY: "smart-violation-key"
+        VITE_REVERB_APP_KEY: "hmjlxclvdrbnyu9wm0g7"
         VITE_REVERB_HOST: "localhost"
-        VITE_REVERB_PORT: "10000"
+        VITE_REVERB_PORT: "8080"
         VITE_REVERB_SCHEME: "http"
     container_name: laravel-app
     ports:

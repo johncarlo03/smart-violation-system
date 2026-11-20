@@ -104,7 +104,7 @@ new class extends Component
     ->orderByDesc('has_pending_appeal')
     ->orderByDesc('created_at')
     ->orderByDesc('id')
-    ->simplePaginate(10);
+    ->Paginate(10);
     }
 };
 ?>
@@ -270,6 +270,9 @@ new class extends Component
                 @endforelse
             </tbody>
         </table>
+        <div class="px-6 py-4 border-t border-gray-100">
+    {{ $this->violations->links() }}
+</div>
     </div>
 
 </div>

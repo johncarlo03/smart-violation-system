@@ -9,10 +9,6 @@ class SAOAdminController extends Controller
 {
     public function index()
     {
-        if (Auth::user()->role === 4) {
-            return view('admin-dashboard');
-        }
-
         return view('sao.dashboard');
     }
 }

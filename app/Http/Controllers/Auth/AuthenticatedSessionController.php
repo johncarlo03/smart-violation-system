@@ -30,7 +30,7 @@ class AuthenticatedSessionController extends Controller
 
         $home = match ((int) $request->user()->role) {
             4 => '/superadmin/dashboard',
-            3 => '/sao/dashboard',
+            3 => '/violations/dashboard',
             2, 5 => '/violation',                          // CSO and teaching staff
             default => route('dashboard', absolute: false),   // students
         };

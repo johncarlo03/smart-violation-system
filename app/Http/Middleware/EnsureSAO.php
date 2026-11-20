@@ -8,23 +8,26 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureSAO
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->user()->role === 4) {
-            return redirect('/superadmin/dashboard');
-        } else if (auth()->user()->role === 3) {
-            return redirect('/sao/dashboard');
-        } else if (auth()->user()->role === 2) {
-            return redirect('/violations');
-        } else if (auth()->user()->role === 1) {
-            return redirect('/dashboard');
+        $role = (int) auth()->user()->role;
+
+        if ($role === 4) {
+            return redirect()->route('superadmin.dashboard');
         }
 
-        return $next($request);
+        if (in_array($role, [3, 6, 7])) {
+            return redirect()->route('sao.dashboard');
+        }
+
+        if (in_array($role, [2, 5])) {
+            return redirect()->route('cso.dashboard');
+        }
+
+        if ($role === 1) {
+            return redirect()->route('dashboard');
+        }
+
+        abort(403, 'Unauthorized Role');
     }
 }

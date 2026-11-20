@@ -383,7 +383,7 @@
 
             <div class="relative z-10 flex flex-col items-center text-center">
                 <div class="p-4 bg-white/10 rounded-full mb-6 shadow-inner">
-                    <img src="{{ asset('images/ctu-logo.png') }}" alt="CTU Logo" class="h-24 w-24">
+                    <img src="{{ asset('images/CTU-logo.png') }}" alt="CTU Logo" class="h-24 w-24">
                 </div>
 
                 <!-- Login mode -->

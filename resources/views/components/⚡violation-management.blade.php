@@ -32,6 +32,22 @@ new class extends Component {
     #[Computed]
     public function summaryStats()
     {
+        $user = auth()->user();
+
+        $office = match ((int) $user->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => null,
+        };
+
+        $pendingStatus = match ($office) {
+            'chairman' => 'pending_chairman',
+            'dean' => 'pending_dean',
+            'sao' => 'pending_sao',
+            default => null,
+        };
+
         return $this->inPeriod()
             ->leftJoin('offenses', 'violations.offense_id', '=', 'offenses.id')
             ->selectRaw('
@@ -41,11 +57,13 @@ new class extends Component {
             ) AS pending,
             COUNT(violations.id) FILTER (
                 WHERE offenses.category IN (?, ?)
+                AND violations.status IN (?)
             ) AS major
         ', [
                 $this->getPendingStatus(),
                 'Serious',
                 'Very Serious',
+                $pendingStatus,
             ])
             ->first();
     }
@@ -151,7 +169,7 @@ new class extends Component {
     }
 
     #[Url(as: 'period')]
-    public string $period = 'month';
+    public string $period = 'all';
 
     public function setPeriod(string $period): void
     {

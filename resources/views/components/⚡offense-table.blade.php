@@ -18,7 +18,15 @@ new class extends Component {
             $query->where('name', 'like', '%' . $this->search . '%')
                 ->orWhere('category', 'like', '%' . $this->search . '%');
         })
-            ->orderByRaw("FIELD(category, 'Academic', 'Non-Academic', 'Serious', 'Very Serious') ASC")
+            ->orderByRaw("
+                CASE category
+                    WHEN 'Academic' THEN 1
+                    WHEN 'Non-Academic' THEN 2
+                    WHEN 'Serious' THEN 3
+                    WHEN 'Very Serious' THEN 4
+                    ELSE 5
+                END ASC
+            ")
             ->get();
     }
 };

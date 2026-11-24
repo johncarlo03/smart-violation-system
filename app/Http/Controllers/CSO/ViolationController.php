@@ -140,51 +140,45 @@ class ViolationController extends Controller
         );
     }
 
-    // Chairman forwards to Dean
-    public function forwardToDean(Violation $violation)
+    public function forward(Violation $violation)
     {
-        if (auth()->user()->role !== 7) {
-            abort(403);
-        }
-
-        if ($violation->status !== 'pending_chairman') {
-            return back()->withErrors([
-                'violation' => 'This violation is not awaiting Chairman review.',
+        $user = auth()->user();
+        
+        if (
+            $user->role == 6 &&
+            $violation->status === 'pending_chairman'
+        ) {
+            $violation->update([
+                'status' => 'pending_dean',
             ]);
+
+            ViolationUpdated::dispatch();
+
+            return back()->with(
+                'success',
+                'Violation successfully forwarded to the Dean.'
+            );
         }
 
-        $violation->update([
-            'status' => 'pending_dean',
-        ]);
-
-        ViolationUpdated::dispatch();
-
-        return back()->with('success', 'Violation forwarded to the Dean.');
-    }
-
-    // Dean forwards to SAO
-    public function forwardToSao(Violation $violation)
-    {
-        if (auth()->user()->role !== 6) {
-            abort(403);
-        }
-
-        if ($violation->status !== 'pending_dean') {
-            return back()->withErrors([
-                'violation' => 'This violation is not awaiting Dean review.',
+        // Dean: pending_dean → pending_sao
+        if (
+            $user->role == 7 &&
+            $violation->status === 'pending_dean'
+        ) {
+            $violation->update([
+                'status' => 'pending_sao',
             ]);
+
+            ViolationUpdated::dispatch();
+
+            return back()->with(
+                'success',
+                'Violation successfully forwarded to SAO.'
+            );
         }
 
-        $violation->update([
-            'status' => 'pending_sao',
-        ]);
-
-        ViolationUpdated::dispatch();
-
-        return back()->with('success', 'Violation forwarded to the SAO.');
+        abort(403, 'You are not authorized to forward this violation.');
     }
-
-
     public function manage(Violation $violation)
     {
         $violation->load([

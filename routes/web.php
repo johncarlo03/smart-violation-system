@@ -121,6 +121,9 @@ Route::middleware(['auth', 'verified', 'role:3,6,7'])->group(function () {
 
     Route::put('/violations/{violation:uuid}/dismiss', [ViolationController::class, 'dismiss'])
         ->name('violations.dismiss');
+        
+    Route::put('/violations/{violation:uuid}/forward', [ViolationController::class, 'forward']
+        )->name('violations.forward');
 
 });
 

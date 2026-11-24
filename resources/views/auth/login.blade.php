@@ -62,7 +62,7 @@
         <div class="sm:hidden bg-gradient-to-r from-red-600 to-red-900 p-6 text-white text-center shrink-0">
             <div class="flex justify-center mb-3">
                 <div class="p-2.5 bg-white/10 rounded-full">
-                    <img src="{{ asset('images/ctu-logo.png') }}" alt="CTU Logo" class="h-14 w-14">
+                    <img src="{{ asset('images/CTU-Logo.png') }}" alt="CTU Logo" class="h-14 w-14">
                 </div>
             </div>
             <h1 class="text-xl font-extrabold tracking-tight">CTU Smart Violation Portal</h1>

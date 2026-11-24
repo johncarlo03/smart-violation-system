@@ -3,6 +3,12 @@
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
+<style>
+    .ts-dropdown {
+        z-index: 9999 !important;
+    }
+</style>
+
 <x-app-layout>
 
     <div id="studentInfoModal"
@@ -301,6 +307,7 @@
             document.getElementById('studentInfoModal').classList.add('hidden');
         }
         const offenseSelect = new TomSelect("#specificOffense", {
+            dropdownParent: 'body',
             searchField: ["text"],
             maxOptions: 10,
             placeholder: "Search offense...",

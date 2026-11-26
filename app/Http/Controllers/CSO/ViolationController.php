@@ -134,13 +134,15 @@ class ViolationController extends Controller
             'status' => $status,
         ]);
 
+        $office = $this->officeForStatus($status);
+
+        $this->notifyOffice($office, $violation, 'reported');
+
+        // Broadcast real-time notification
         ViolationUpdated::dispatch(
             $violation,
-            $this->notifyOffice(
-                $this->officeForStatus($status),
-                $violation,
-                'reported'
-            )
+            $office,
+            'reported'
         );
 
         return back()->with(
@@ -161,7 +163,13 @@ class ViolationController extends Controller
                 'status' => 'pending_dean',
             ]);
 
-            ViolationUpdated::dispatch($violation, $this->notifyOffice('dean', $violation, 'forwarded'));
+            $this->notifyOffice('dean', $violation, 'forwarded');
+
+            ViolationUpdated::dispatch(
+                $violation,
+                'dean',
+                'forwarded'
+            );
 
 
             return back()->with(
@@ -179,7 +187,13 @@ class ViolationController extends Controller
                 'status' => 'pending_sao',
             ]);
 
-            ViolationUpdated::dispatch($violation, $this->notifyOffice('sao', $violation, 'forwarded'));
+            $this->notifyOffice('sao', $violation, 'forwarded');
+
+            ViolationUpdated::dispatch(
+                $violation,
+                'sao',
+                'forwarded'
+            );
 
             return back()->with(
                 'success',

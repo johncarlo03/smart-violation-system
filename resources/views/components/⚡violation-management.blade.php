@@ -28,7 +28,6 @@ new class extends Component {
         };
     }
 
-
     #[Computed]
     public function summaryStats()
     {
@@ -86,13 +85,11 @@ new class extends Component {
         return $this->summaryStats->major;
     }
 
-
     #[On('echo:violations,ViolationUpdated')]
     public function refreshViolations()
     {
         // The computed properties will be re-evaluated
     }
-
 
     #[Computed]
     public function topOffenses()
@@ -110,7 +107,6 @@ new class extends Component {
             ->limit(5)
             ->get();
     }
-
 
     #[Computed]
     public function deptStats()
@@ -140,13 +136,13 @@ new class extends Component {
         ])->get()->map(function ($d) {
 
             $colors = [
-                1 => 'from-red-400 to-red-600',
-                2 => 'from-blue-400 to-blue-600',
-                3 => 'from-green-400 to-green-600',
-                4 => 'from-yellow-400 to-yellow-500',
+                1 => 'from-red-600 to-red-800',
+                2 => 'from-gray-600 to-gray-800',
+                3 => 'from-amber-400 to-amber-600',
+                4 => 'from-red-400 to-amber-500',
             ];
 
-            $d->barColor = $colors[$d->id] ?? 'from-gray-400 to-gray-600';
+            $d->barColor = $colors[$d->id] ?? 'from-gray-500 to-gray-700';
             $d->acronym = $d->acronym ?? 'N/A';
 
             return $d;
@@ -202,7 +198,6 @@ new class extends Component {
         };
     }
 
-
     private function inPeriod(): Builder
     {
         $office = $this->getUserOffice();
@@ -225,32 +220,35 @@ new class extends Component {
 };
 ?>
 
-<div>
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <p class="text-sm text-gray-500">
-            Showing <span class="font-semibold text-gray-800">{{ $this->periodLabel }}</span>
+<div class="space-y-6">
+    {{-- Period Filter Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p class="text-xs sm:text-sm text-gray-500">
+            Showing <span class="font-bold text-gray-900">{{ $this->periodLabel }}</span>
         </p>
 
-        <div class="inline-flex bg-white border border-gray-200 rounded-xl p-1 shadow-sm" role="group"
-            aria-label="Time period">
+        <div class="flex sm:inline-flex overflow-x-auto bg-gray-50 border border-gray-200 rounded-xl p-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            role="group" aria-label="Time period">
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
-                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                                                    {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                    class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition
+                        {{ $this->period === $key ? 'bg-[#1f2937] text-white shadow-xs' : 'text-gray-600 hover:bg-white hover:text-gray-900' }}">
                     {{ $label }}
                 </button>
             @endforeach
         </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:shadow-xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Total Records</div>
-                    <div class="text-4xl font-black text-gray-800 mt-2">{{ $this->totalViolations }}</div>
+
+    {{-- Summary Metric Cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Records</div>
+                    <div class="text-3xl sm:text-4xl font-black text-gray-900 mt-1.5">{{ $this->totalViolations }}</div>
                 </div>
-                <div class="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-[#1f2937]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -258,14 +256,14 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:shadow-xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Pending Review</div>
-                    <div class="text-4xl font-black text-orange-500 mt-2">{{ $this->pendingReview }}</div>
+        <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Pending Review</div>
+                    <div class="text-3xl sm:text-4xl font-black text-amber-600 mt-1.5">{{ $this->pendingReview }}</div>
                 </div>
-                <div class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -273,14 +271,14 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 shadow-md border border-gray-100 hover:shadow-xl transition duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Major Incidents</div>
-                    <div class="text-4xl font-black text-red-600 mt-2">{{ $this->majorIncidents }}</div>
+        <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
+            <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Major Incidents</div>
+                    <div class="text-3xl sm:text-4xl font-black text-red-700 mt-1.5">{{ $this->majorIncidents }}</div>
                 </div>
-                <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
-                    <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
@@ -289,129 +287,238 @@ new class extends Component {
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 class="font-black text-gray-800 mb-6 text-lg">Top 5 Common Violations</h3>
-            <div class="space-y-5">
+    {{-- Analytics Row --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
+            <h3 class="font-bold text-gray-900 mb-5 text-base sm:text-lg">Top 5 Common Violations</h3>
+            <div class="space-y-4">
                 @php $maxTotal = $this->topOffenses->first()->total ?? 0; @endphp
                 @forelse($this->topOffenses as $item)
                     <div>
-                        <div class="flex justify-between text-sm mb-2">
-                            <span class="font-semibold text-gray-700">{{ $item->offense_name ?? 'Unknown' }}</span>
-                            <span class="font-black text-indigo-600">{{ $item->total }}</span>
+                        <div class="flex justify-between items-baseline gap-2 text-xs sm:text-sm mb-1.5">
+                            <span class="font-semibold text-gray-700 break-words">{{ $item->offense_name ?? 'Unknown' }}</span>
+                            <span class="font-black text-indigo-600 shrink-0">{{ $item->total }}</span>
                         </div>
-                        <div class="w-full bg-gray-100 rounded-full h-2.5">
-                            <div class="bg-gradient-to-r from-indigo-500 to-indigo-700 h-2.5 rounded-full transition-all duration-700"
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-indigo-500 to-indigo-700 h-2 rounded-full transition-all duration-500"
                                 style="width: {{ $maxTotal > 0 ? ($item->total / $maxTotal) * 100 : 0 }}%">
                             </div>
                         </div>
                     </div>
                 @empty
-                    <p class="text-xs text-center text-gray-400 italic">No violations recorded yet.</p>
+                    <p class="text-xs text-center text-gray-400 italic py-6">No violations recorded yet.</p>
                 @endforelse
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-            <h3 class="font-black text-gray-800 mb-6 text-lg text-center">Reports by Department</h3>
-            <div class="flex items-end justify-around h-56">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
+            <h3 class="font-bold text-gray-900 mb-5 text-base sm:text-lg text-center">Reports by Department</h3>
+            <div class="flex items-end justify-around gap-2 h-48 sm:h-52 pt-4">
+                @php $maxDeptTotal = $this->deptStats->max('total') ?? 0; @endphp
                 @foreach($this->deptStats as $dept)
-                    <div class="flex flex-col items-center">
-                        <div class="relative group">
-                            <div class="bg-gradient-to-t {{ $dept->barColor }} w-14 rounded-t-2xl shadow-md transition-all duration-300 group-hover:scale-105"
-                                style="height: {{ $this->deptStats->max('total') > 0 ? ($dept->total / $this->deptStats->max('total')) * 140 : 0 }}px">
-                            </div>
+                    <div class="flex flex-col items-center flex-1 min-w-0">
+                        <div class="bg-gradient-to-t {{ $dept->barColor }} w-10 sm:w-14 rounded-t-xl transition-all duration-300"
+                            style="height: {{ $maxDeptTotal > 0 ? max(($dept->total / $maxDeptTotal) * 130, $dept->total > 0 ? 8 : 0) : 0 }}px">
                         </div>
-                        <span
-                            class="text-[11px] mt-3 font-black text-gray-700 text-center uppercase tracking-wide">{{ $dept->acronym }}</span>
-                        <span class="text-xs text-gray-400 font-semibold">{{ $dept->total }}</span>
+                        <span class="text-[11px] mt-2.5 font-bold text-gray-700 text-center uppercase tracking-wide truncate w-full">
+                            {{ $dept->acronym }}
+                        </span>
+                        <span class="text-xs text-gray-500 font-semibold">{{ $dept->total }}</span>
                     </div>
                 @endforeach
             </div>
         </div>
     </div>
 
-    {{-- Violation Queue Table --}}
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-100">
-            <h3 class="text-xl font-black text-gray-800">Recent Violation Queue</h3>
-            <p class="text-sm text-gray-500 mt-1">Review recently submitted student incidents.</p>
+    {{-- Recent Violation Queue --}}
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <h3 class="text-base sm:text-lg font-bold text-gray-900">Recent Violation Queue</h3>
+                <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Review recently submitted student incidents.</p>
+            </div>
+            <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
+                Latest {{ $this->violations->count() }}
+            </span>
         </div>
 
-        <div class="overflow-x-auto">
+        {{-- Mobile Card List (Visible below md) --}}
+        <div class="md:hidden divide-y divide-gray-100">
+            @forelse($this->violations as $v)
+                @php
+                    $isPending = str_starts_with($v->status, 'pending_');
+                    $statusLabel = match ($v->status) {
+                        'pending_chairman' => 'Pending Chairman',
+                        'pending_dean' => 'Pending Dean',
+                        'pending_sao' => 'Pending SAO',
+                        'resolved' => 'Resolved',
+                        'dismissed' => 'Dismissed',
+                        default => ucfirst(str_replace('_', ' ', $v->status)),
+                    };
+                @endphp
+
+                <div class="p-4 space-y-3 hover:bg-gray-50/70 transition-colors">
+                    {{-- Top Row: Avatar, Student Info & Status --}}
+                    <div class="flex items-start justify-between gap-2.5">
+                        <div class="flex items-center gap-3 min-w-0">
+                            @if($v->student?->profile_photo)
+                                <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
+                                    alt="{{ $v->student->name }}"
+                                    class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0">
+                            @else
+                                <div class="w-10 h-10 rounded-full bg-[#1f2937] text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                                    {{ strtoupper(substr($v->student->name ?? '?', 0, 1)) }}
+                                </div>
+                            @endif
+
+                            <div class="min-w-0">
+                                <div class="font-bold text-sm text-gray-900 truncate">{{ $v->student->name ?? 'Unknown Student' }}</div>
+                                <div class="text-xs text-gray-500 mt-0.5 truncate">
+                                    {{ $v->department->acronym ?? 'N/A' }} • {{ $v->student->id_number ?? 'No ID' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
+                            {{ $isPending
+                                ? 'bg-amber-100 text-amber-800'
+                                : ($v->status === 'resolved'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-red-100 text-red-800') }}">
+                            {{ $statusLabel }}
+                        </span>
+                    </div>
+
+                    {{-- Middle Box: Offense & Reporter --}}
+                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1.5">
+                        <div class="flex flex-wrap items-center justify-between gap-1.5">
+                            <span class="font-bold text-xs text-gray-800 break-words">{{ $v->offense->name ?? 'N/A' }}</span>
+                            @if($v->offense?->category)
+                                <span class="px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600 text-[10px] uppercase font-bold tracking-wider">
+                                    {{ $v->offense->category }}
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-xs text-gray-500">
+                            Reported by <span class="font-semibold text-gray-700">{{ $v->cso->name ?? 'Unknown' }}</span>
+                        </p>
+                    </div>
+
+                    {{-- Bottom Row: Action Buttons --}}
+                    <div class="flex items-center gap-2 pt-0.5">
+                        @if($v->evidence_image)
+                            <button type="button" onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition">
+                                View Photo
+                            </button>
+                        @endif
+                        <a href="{{ route('violations.manage', $v->uuid) }}"
+                            class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-[#1f2937] text-white text-xs font-bold hover:bg-gray-800 transition">
+                            Manage
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div class="px-4 py-14 text-center">
+                    <div class="flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                            </svg>
+                        </div>
+                        <p class="font-bold text-sm text-gray-600">No violation records yet</p>
+                        <p class="text-xs text-gray-400 mt-1">Reports will appear here once submitted.</p>
+                    </div>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Desktop Table (Visible md and up) --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr
-                        class="bg-gradient-to-r from-gray-50 to-gray-100 border-b text-gray-500 text-[11px] uppercase tracking-[0.15em]">
-                        <th class="px-6 py-4 font-black">Student</th>
-                        <th class="px-6 py-4 font-black">Offense</th>
-                        <th class="px-6 py-4 font-black">Reported By</th>
-                        <th class="px-6 py-4 font-black text-center">Status</th>
-                        <th class="px-6 py-4 font-black text-right">Action</th>
+                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-[11px] uppercase tracking-[0.15em]">
+                        <th class="px-6 py-3.5 font-bold">Student</th>
+                        <th class="px-6 py-3.5 font-bold">Offense</th>
+                        <th class="px-6 py-3.5 font-bold">Reported By</th>
+                        <th class="px-6 py-3.5 font-bold text-center">Status</th>
+                        <th class="px-6 py-3.5 font-bold text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($this->violations as $v)
-                                    <tr class="hover:bg-indigo-50/40 transition duration-200">
-                                        <td class="px-6 py-5">
-                                            <div class="flex items-center gap-4">
-                                                @if($v->student->profile_photo)
-                                                    <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
-                                                        class="w-12 h-12 rounded-full object-cover shadow-sm">
-                                                @else
-                                                    <div
-                                                        class="w-12 h-12 rounded-full {{ $v->department->badgeColor ?? 'bg-gray-100' }} flex items-center justify-center font-black text-sm shadow-sm">
-                                                        {{ strtoupper(substr($v->student->name, 0, 1)) }}
-                                                    </div>
-                                                @endif
-                                                <div>
-                                                    <div class="font-bold text-gray-900">{{ $v->student->name }}</div>
-                                                    <div class="text-xs text-gray-500 mt-1">{{ $v->department->acronym ?? 'N/A' }} •
-                                                        {{ $v->student->id_number }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5">
-                                            <div class="font-bold text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
-                                            <div
-                                                class="inline-flex mt-2 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-black tracking-wider">
-                                                {{ $v->offense->category ?? '' }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
-                                        <td class="px-6 py-5 text-center">
-                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                                                    {{ str_starts_with($v->status, 'pending_')
-                        ? 'bg-orange-100 text-orange-700'
-                        : ($v->status === 'resolved'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700') }}">
-                                                {{ $v->status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-5 text-right">
-                                            <div class="flex justify-end gap-2">
-                                                @if($v->evidence_image)
-                                                    <button onclick="openEvidenceModal('{{ $v->evidence_image }}')"
-                                                        class="inline-flex items-center px-3 py-2 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200 transition">
-                                                        View Photo
-                                                    </button>
-                                                @endif
-                                                <a href="{{ route('violations.manage', $v->uuid) }}"
-                                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
-                                                    Manage
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
+                        @php
+                            $isPending = str_starts_with($v->status, 'pending_');
+                            $statusLabel = match ($v->status) {
+                                'pending_chairman' => 'Pending Chairman',
+                                'pending_dean' => 'Pending Dean',
+                                'pending_sao' => 'Pending SAO',
+                                'resolved' => 'Resolved',
+                                'dismissed' => 'Dismissed',
+                                default => ucfirst(str_replace('_', ' ', $v->status)),
+                            };
+                        @endphp
+                        <tr class="hover:bg-gray-50/70 transition duration-150">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3.5">
+                                    @if($v->student?->profile_photo)
+                                        <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
+                                            alt="{{ $v->student->name }}"
+                                            class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0">
+                                    @else
+                                        <div class="w-10 h-10 rounded-full bg-[#1f2937] text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                                            {{ strtoupper(substr($v->student->name ?? '?', 0, 1)) }}
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <div class="font-bold text-sm text-gray-900">{{ $v->student->name ?? 'Unknown Student' }}</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">
+                                            {{ $v->department->acronym ?? 'N/A' }} • {{ $v->student->id_number ?? 'No ID' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-sm text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
+                                @if($v->offense?->category)
+                                    <div class="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-bold tracking-wider">
+                                        {{ $v->offense->category }}
+                                    </div>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ $v->cso->name ?? 'Unknown' }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
+                                    {{ $isPending
+                                        ? 'bg-amber-100 text-amber-800'
+                                        : ($v->status === 'resolved'
+                                            ? 'bg-emerald-100 text-emerald-800'
+                                            : 'bg-red-100 text-red-800') }}">
+                                    {{ $statusLabel }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex justify-end gap-2">
+                                    @if($v->evidence_image)
+                                        <button type="button" onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                            class="inline-flex items-center px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition">
+                                            View Photo
+                                        </button>
+                                    @endif
+                                    <a href="{{ route('violations.manage', $v->uuid) }}"
+                                        class="inline-flex items-center px-3.5 py-2 rounded-xl bg-[#1f2937] text-white text-xs font-bold hover:bg-gray-800 transition">
+                                        Manage
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-20 text-center">
+                            <td colspan="5" class="px-4 py-16 text-center">
                                 <div class="flex flex-col items-center">
-                                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                    <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
                                         </svg>

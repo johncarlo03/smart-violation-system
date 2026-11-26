@@ -111,8 +111,6 @@ new class extends Component {
             $this->topOffenses,
             $this->deptStats,
             $this->violations,
-            $this->notifications,
-            $this->unreadNotificationCount
         );
 
         // Send the notification details to the browser.
@@ -124,53 +122,6 @@ new class extends Component {
             action: $event['action'] ?? 'updated'
         );
     }
-
-
-    #[Computed]
-    public function notifications()
-    {
-        return auth()->user()
-            ->notifications()
-            ->latest()
-            ->take(10)
-            ->get();
-    }
-
-    #[Computed]
-    public function unreadNotificationCount()
-    {
-        return auth()->user()
-            ->unreadNotifications()
-            ->count();
-    }
-
-    public function markNotificationAsRead(string $id): void
-    {
-        $notification = auth()->user()
-            ->notifications()
-            ->findOrFail($id);
-
-        $notification->markAsRead();
-
-        unset(
-            $this->notifications,
-            $this->unreadNotificationCount
-        );
-    }
-
-    public function markAllNotificationsAsRead(): void
-    {
-        auth()->user()
-            ->unreadNotifications()
-            ->update(['read_at' => now()]);
-
-        unset(
-            $this->notifications,
-            $this->unreadNotificationCount
-        );
-    }
-
-
 
 
     #[Computed]
@@ -303,131 +254,7 @@ new class extends Component {
 ?>
 
 <div class="space-y-6">
-
-<div x-data="{ open: false }" class="relative">
-    <div class="flex justify-end">
-        <button
-            type="button"
-            @click="open = !open"
-            class="relative p-3 rounded-xl hover:bg-gray-100 transition"
-        >
-            <svg
-                class="w-6 h-6 text-gray-700"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-5-5.9V4a1 1 0 00-2 0v1.1A6 6 0 006 11v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0"
-                />
-            </svg>
-
-            @if ($this->unreadNotificationCount > 0)
-                <span class="absolute top-1 right-1 min-w-5 h-5 px-1
-                    flex items-center justify-center rounded-full
-                    bg-red-500 text-white text-xs font-bold">
-                    {{ $this->unreadNotificationCount > 99
-                        ? '99+'
-                        : $this->unreadNotificationCount }}
-                </span>
-            @endif
-        </button>
-    </div>
-
-    <div
-        x-show="open"
-        @click.outside="open = false"
-        x-transition
-        x-cloak
-        class="absolute right-0 mt-2 w-80 sm:w-96 bg-white
-            rounded-2xl shadow-xl border border-gray-200
-            z-50 overflow-hidden"
-    >
-        <div class="p-4 border-b border-gray-100
-            flex items-center justify-between">
-            <div>
-                <h3 class="font-bold text-gray-800">
-                    Notifications
-                </h3>
-
-                <p class="text-xs text-gray-500">
-                    {{ $this->unreadNotificationCount }} unread
-                </p>
-            </div>
-
-            @if ($this->unreadNotificationCount > 0)
-                <button
-                    type="button"
-                    wire:click="markAllNotificationsAsRead"
-                    class="text-xs font-semibold text-indigo-600
-                        hover:text-indigo-800"
-                >
-                    Mark all as read
-                </button>
-            @endif
-        </div>
-
-        <div class="max-h-96 overflow-y-auto">
-            @forelse ($this->notifications as $notification)
-                <button
-                    type="button"
-                    wire:key="notification-{{ $notification->id }}"
-                    wire:click="markNotificationAsRead('{{ $notification->id }}')"
-                    class="w-full text-left p-4 border-b border-gray-100
-                        hover:bg-gray-50 transition
-                        {{ $notification->read_at ? 'bg-white' : 'bg-indigo-50/60' }}"
-                >
-                    <div class="flex gap-3">
-                        <div class="w-9 h-9 rounded-full
-                            bg-indigo-100 text-indigo-600
-                            flex items-center justify-center shrink-0">
-                            <span>!</span>
-                        </div>
-
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-gray-800">
-                                {{ $notification->data['message']
-                                    ?? 'You have a new notification.' }}
-                            </p>
-
-                            @if (!empty($notification->data['student']))
-                                <p class="text-xs text-gray-600 mt-1">
-                                    Student:
-                                    {{ $notification->data['student'] }}
-                                </p>
-                            @endif
-
-                            @if (!empty($notification->data['offense']))
-                                <p class="text-xs text-gray-600">
-                                    Offense:
-                                    {{ $notification->data['offense'] }}
-                                </p>
-                            @endif
-
-                            <p class="text-xs text-gray-400 mt-2">
-                                {{ $notification->created_at->diffForHumans() }}
-                            </p>
-                        </div>
-
-                        @if (!$notification->read_at)
-                            <span class="w-2 h-2 rounded-full
-                                bg-indigo-600 shrink-0 mt-2"></span>
-                        @endif
-                    </div>
-                </button>
-            @empty
-                <div class="p-8 text-center">
-                    <p class="text-sm text-gray-500">
-                        No notifications yet.
-                    </p>
-                </div>
-            @endforelse
-        </div>
-    </div>
-</div>
+<livewire:notification-bell />
 
     {{-- Period Filter Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -440,7 +267,7 @@ new class extends Component {
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                                                                        {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                                                                                {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
             @endforeach
@@ -594,7 +421,7 @@ new class extends Component {
                             </div>
 
                             <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
-                                            {{ $isPending
+                                                            {{ $isPending
                 ? 'bg-amber-100 text-amber-800'
                 : ($v->status === 'resolved'
                     ? 'bg-emerald-100 text-emerald-800'
@@ -695,7 +522,7 @@ new class extends Component {
                                         <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
                                         <td class="px-6 py-5 text-center">
                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
+                                                                                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
                         ? 'bg-orange-100 text-orange-700'
                         : ($v->status === 'resolved'
                             ? 'bg-green-100 text-green-700'

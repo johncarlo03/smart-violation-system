@@ -89,7 +89,9 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail
             2 => route('cso.dashboard'),                // CSO
             3 => route('sao.dashboard.index'),         // SAO
             4 => route('superadmin.users.index'),       // Super Admin
-            5 => route('cso.dashboard'),                 // Teaching staff
+            5 => route('cso.dashboard'),
+            6 => route('sao.dashboard.index'),
+            7 => route('sao.dashboard.index'),
             default => route('dashboard'),
         };
     }

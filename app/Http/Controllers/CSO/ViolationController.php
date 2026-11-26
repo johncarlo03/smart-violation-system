@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\CSO;
 
 use App\Events\ViolationUpdated;
+use App\Notifications\ViolationAssigned;
 use App\Http\Controllers\Controller;
 use App\Models\Violation;
 use Illuminate\Http\Request;
@@ -135,8 +136,11 @@ class ViolationController extends Controller
 
         ViolationUpdated::dispatch(
             $violation,
-            $this->officeForStatus($status),
-            'reported'
+            $this->notifyOffice(
+                $this->officeForStatus($status),
+                $violation,
+                'reported'
+            )
         );
 
         return back()->with(
@@ -157,7 +161,8 @@ class ViolationController extends Controller
                 'status' => 'pending_dean',
             ]);
 
-            ViolationUpdated::dispatch($violation, 'dean', 'forwarded');
+            ViolationUpdated::dispatch($violation, $this->notifyOffice('dean', $violation, 'forwarded'));
+
 
             return back()->with(
                 'success',
@@ -174,7 +179,7 @@ class ViolationController extends Controller
                 'status' => 'pending_sao',
             ]);
 
-            ViolationUpdated::dispatch($violation, 'sao', 'forwarded');
+            ViolationUpdated::dispatch($violation, $this->notifyOffice('sao', $violation, 'forwarded'));
 
             return back()->with(
                 'success',
@@ -349,6 +354,31 @@ class ViolationController extends Controller
                 "Unknown violation status: {$status}"
             ),
         };
+    }
+
+    private function notifyOffice(
+        string $office,
+        Violation $violation,
+        string $action
+    ): void {
+        $role = match ($office) {
+            'dean' => 7,
+            'chairman' => 6,
+            'sao' => 3,
+            default => null,
+        };
+
+        if ($role === null) {
+            return;
+        }
+
+        User::where('role', $role)
+            ->get()
+            ->each(function ($user) use ($violation, $action) {
+                $user->notify(
+                    new ViolationAssigned($violation, $action)
+                );
+            });
     }
 
 }

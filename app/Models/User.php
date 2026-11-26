@@ -16,7 +16,7 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail
     use \OwenIt\Auditing\Auditable;
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
-
+    
     protected $auditExclude = ['password', 'remember_token'];
     /**
      * The attributes that are mass assignable.

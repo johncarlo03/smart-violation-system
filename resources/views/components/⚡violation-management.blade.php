@@ -110,7 +110,9 @@ new class extends Component {
             $this->majorIncidents,
             $this->topOffenses,
             $this->deptStats,
-            $this->violations
+            $this->violations,
+            $this->notifications,
+            $this->unreadNotificationCount
         );
 
         // Send the notification details to the browser.
@@ -122,6 +124,52 @@ new class extends Component {
             action: $event['action'] ?? 'updated'
         );
     }
+
+
+    #[Computed]
+    public function notifications()
+    {
+        return auth()->user()
+            ->notifications()
+            ->latest()
+            ->take(10)
+            ->get();
+    }
+
+    #[Computed]
+    public function unreadNotificationCount()
+    {
+        return auth()->user()
+            ->unreadNotifications()
+            ->count();
+    }
+
+    public function markNotificationAsRead(string $id): void
+    {
+        $notification = auth()->user()
+            ->notifications()
+            ->findOrFail($id);
+
+        $notification->markAsRead();
+
+        unset(
+            $this->notifications,
+            $this->unreadNotificationCount
+        );
+    }
+
+    public function markAllNotificationsAsRead(): void
+    {
+        auth()->user()
+            ->unreadNotifications()
+            ->update(['read_at' => now()]);
+
+        unset(
+            $this->notifications,
+            $this->unreadNotificationCount
+        );
+    }
+
 
 
 
@@ -255,6 +303,132 @@ new class extends Component {
 ?>
 
 <div class="space-y-6">
+
+<div x-data="{ open: false }" class="relative">
+    <div class="flex justify-end">
+        <button
+            type="button"
+            @click="open = !open"
+            class="relative p-3 rounded-xl hover:bg-gray-100 transition"
+        >
+            <svg
+                class="w-6 h-6 text-gray-700"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-5-5.9V4a1 1 0 00-2 0v1.1A6 6 0 006 11v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0"
+                />
+            </svg>
+
+            @if ($this->unreadNotificationCount > 0)
+                <span class="absolute top-1 right-1 min-w-5 h-5 px-1
+                    flex items-center justify-center rounded-full
+                    bg-red-500 text-white text-xs font-bold">
+                    {{ $this->unreadNotificationCount > 99
+                        ? '99+'
+                        : $this->unreadNotificationCount }}
+                </span>
+            @endif
+        </button>
+    </div>
+
+    <div
+        x-show="open"
+        @click.outside="open = false"
+        x-transition
+        x-cloak
+        class="absolute right-0 mt-2 w-80 sm:w-96 bg-white
+            rounded-2xl shadow-xl border border-gray-200
+            z-50 overflow-hidden"
+    >
+        <div class="p-4 border-b border-gray-100
+            flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-gray-800">
+                    Notifications
+                </h3>
+
+                <p class="text-xs text-gray-500">
+                    {{ $this->unreadNotificationCount }} unread
+                </p>
+            </div>
+
+            @if ($this->unreadNotificationCount > 0)
+                <button
+                    type="button"
+                    wire:click="markAllNotificationsAsRead"
+                    class="text-xs font-semibold text-indigo-600
+                        hover:text-indigo-800"
+                >
+                    Mark all as read
+                </button>
+            @endif
+        </div>
+
+        <div class="max-h-96 overflow-y-auto">
+            @forelse ($this->notifications as $notification)
+                <button
+                    type="button"
+                    wire:key="notification-{{ $notification->id }}"
+                    wire:click="markNotificationAsRead('{{ $notification->id }}')"
+                    class="w-full text-left p-4 border-b border-gray-100
+                        hover:bg-gray-50 transition
+                        {{ $notification->read_at ? 'bg-white' : 'bg-indigo-50/60' }}"
+                >
+                    <div class="flex gap-3">
+                        <div class="w-9 h-9 rounded-full
+                            bg-indigo-100 text-indigo-600
+                            flex items-center justify-center shrink-0">
+                            <span>!</span>
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-800">
+                                {{ $notification->data['message']
+                                    ?? 'You have a new notification.' }}
+                            </p>
+
+                            @if (!empty($notification->data['student']))
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Student:
+                                    {{ $notification->data['student'] }}
+                                </p>
+                            @endif
+
+                            @if (!empty($notification->data['offense']))
+                                <p class="text-xs text-gray-600">
+                                    Offense:
+                                    {{ $notification->data['offense'] }}
+                                </p>
+                            @endif
+
+                            <p class="text-xs text-gray-400 mt-2">
+                                {{ $notification->created_at->diffForHumans() }}
+                            </p>
+                        </div>
+
+                        @if (!$notification->read_at)
+                            <span class="w-2 h-2 rounded-full
+                                bg-indigo-600 shrink-0 mt-2"></span>
+                        @endif
+                    </div>
+                </button>
+            @empty
+                <div class="p-8 text-center">
+                    <p class="text-sm text-gray-500">
+                        No notifications yet.
+                    </p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+</div>
+
     {{-- Period Filter Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p class="text-xs sm:text-sm text-gray-500">
@@ -266,7 +440,7 @@ new class extends Component {
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                                                                {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                                                                        {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
             @endforeach
@@ -296,7 +470,8 @@ new class extends Component {
                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Pending Review</div>
                     <div class="text-3xl sm:text-4xl font-black text-amber-600 mt-1.5">{{ $this->pendingReview }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
                     <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -311,7 +486,8 @@ new class extends Component {
                     <div class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Major Incidents</div>
                     <div class="text-3xl sm:text-4xl font-black text-red-700 mt-1.5">{{ $this->majorIncidents }}</div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -330,7 +506,8 @@ new class extends Component {
                 @forelse($this->topOffenses as $item)
                     <div>
                         <div class="flex justify-between items-baseline gap-2 text-xs sm:text-sm mb-1.5">
-                            <span class="font-semibold text-gray-700 break-words">{{ $item->offense_name ?? 'Unknown' }}</span>
+                            <span
+                                class="font-semibold text-gray-700 break-words">{{ $item->offense_name ?? 'Unknown' }}</span>
                             <span class="font-black text-indigo-600 shrink-0">{{ $item->total }}</span>
                         </div>
                         <div class="w-full bg-gray-100 rounded-full h-2">
@@ -354,7 +531,8 @@ new class extends Component {
                         <div class="bg-gradient-to-t {{ $dept->barColor }} w-10 sm:w-14 rounded-t-xl transition-all duration-300"
                             style="height: {{ $maxDeptTotal > 0 ? max(($dept->total / $maxDeptTotal) * 130, $dept->total > 0 ? 8 : 0) : 0 }}px">
                         </div>
-                        <span class="text-[11px] mt-2.5 font-bold text-gray-700 text-center uppercase tracking-wide truncate w-full">
+                        <span
+                            class="text-[11px] mt-2.5 font-bold text-gray-700 text-center uppercase tracking-wide truncate w-full">
                             {{ $dept->acronym }}
                         </span>
                         <span class="text-xs text-gray-500 font-semibold">{{ $dept->total }}</span>
@@ -379,79 +557,83 @@ new class extends Component {
         {{-- Mobile Card List (Visible below md) --}}
         <div class="md:hidden divide-y divide-gray-100">
             @forelse($this->violations as $v)
-                @php
-                    $isPending = str_starts_with($v->status, 'pending_');
-                    $statusLabel = match ($v->status) {
-                        'pending_chairman' => 'Pending Chairman',
-                        'pending_dean' => 'Pending Dean',
-                        'pending_sao' => 'Pending SAO',
-                        'resolved' => 'Resolved',
-                        'dismissed' => 'Dismissed',
-                        default => ucfirst(str_replace('_', ' ', $v->status)),
-                    };
-                @endphp
+                    @php
+                        $isPending = str_starts_with($v->status, 'pending_');
+                        $statusLabel = match ($v->status) {
+                            'pending_chairman' => 'Pending Chairman',
+                            'pending_dean' => 'Pending Dean',
+                            'pending_sao' => 'Pending SAO',
+                            'resolved' => 'Resolved',
+                            'dismissed' => 'Dismissed',
+                            default => ucfirst(str_replace('_', ' ', $v->status)),
+                        };
+                    @endphp
 
-                <div class="p-4 space-y-3 hover:bg-gray-50/70 transition-colors">
-                    {{-- Top Row: Avatar, Student Info & Status --}}
-                    <div class="flex items-start justify-between gap-2.5">
-                        <div class="flex items-center gap-3 min-w-0">
-                            @if($v->student?->profile_photo)
-                                <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
-                                    alt="{{ $v->student->name }}"
-                                    class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0">
-                            @else
-                                <div class="w-10 h-10 rounded-full bg-[#1f2937] text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
-                                    {{ strtoupper(substr($v->student->name ?? '?', 0, 1)) }}
-                                </div>
-                            @endif
+                    <div class="p-4 space-y-3 hover:bg-gray-50/70 transition-colors">
+                        {{-- Top Row: Avatar, Student Info & Status --}}
+                        <div class="flex items-start justify-between gap-2.5">
+                            <div class="flex items-center gap-3 min-w-0">
+                                @if($v->student?->profile_photo)
+                                    <img src="{{ asset('storage/' . $v->student->profile_photo) }}" alt="{{ $v->student->name }}"
+                                        class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0">
+                                @else
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-[#1f2937] text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                                        {{ strtoupper(substr($v->student->name ?? '?', 0, 1)) }}
+                                    </div>
+                                @endif
 
-                            <div class="min-w-0">
-                                <div class="font-bold text-sm text-gray-900 truncate">{{ $v->student->name ?? 'Unknown Student' }}</div>
-                                <div class="text-xs text-gray-500 mt-0.5 truncate">
-                                    {{ $v->department->acronym ?? 'N/A' }} • {{ $v->student->id_number ?? 'No ID' }}
+                                <div class="min-w-0">
+                                    <div class="font-bold text-sm text-gray-900 truncate">
+                                        {{ $v->student->name ?? 'Unknown Student' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-0.5 truncate">
+                                        {{ $v->department->acronym ?? 'N/A' }} • {{ $v->student->id_number ?? 'No ID' }}
+                                    </div>
                                 </div>
                             </div>
+
+                            <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
+                                            {{ $isPending
+                ? 'bg-amber-100 text-amber-800'
+                : ($v->status === 'resolved'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-red-100 text-red-800') }}">
+                                {{ $statusLabel }}
+                            </span>
                         </div>
 
-                        <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
-                            {{ $isPending
-                                ? 'bg-amber-100 text-amber-800'
-                                : ($v->status === 'resolved'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-red-100 text-red-800') }}">
-                            {{ $statusLabel }}
-                        </span>
-                    </div>
+                        {{-- Middle Box: Offense & Reporter --}}
+                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1.5">
+                            <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                <span
+                                    class="font-bold text-xs text-gray-800 break-words">{{ $v->offense->name ?? 'N/A' }}</span>
+                                @if($v->offense?->category)
+                                    <span
+                                        class="px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600 text-[10px] uppercase font-bold tracking-wider">
+                                        {{ $v->offense->category }}
+                                    </span>
+                                @endif
+                            </div>
+                            <p class="text-xs text-gray-500">
+                                Reported by <span class="font-semibold text-gray-700">{{ $v->cso->name ?? 'Unknown' }}</span>
+                            </p>
+                        </div>
 
-                    {{-- Middle Box: Offense & Reporter --}}
-                    <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-1.5">
-                        <div class="flex flex-wrap items-center justify-between gap-1.5">
-                            <span class="font-bold text-xs text-gray-800 break-words">{{ $v->offense->name ?? 'N/A' }}</span>
-                            @if($v->offense?->category)
-                                <span class="px-2 py-0.5 rounded-full bg-white border border-gray-200 text-gray-600 text-[10px] uppercase font-bold tracking-wider">
-                                    {{ $v->offense->category }}
-                                </span>
+                        {{-- Bottom Row: Action Buttons --}}
+                        <div class="flex items-center gap-2 pt-0.5">
+                            @if($v->evidence_image)
+                                <button type="button" onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition">
+                                    View Photo
+                                </button>
                             @endif
+                            <a href="{{ route('violations.manage', $v->uuid) }}"
+                                class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-[#1f2937] text-white text-xs font-bold hover:bg-gray-800 transition">
+                                Manage
+                            </a>
                         </div>
-                        <p class="text-xs text-gray-500">
-                            Reported by <span class="font-semibold text-gray-700">{{ $v->cso->name ?? 'Unknown' }}</span>
-                        </p>
                     </div>
-
-                    {{-- Bottom Row: Action Buttons --}}
-                    <div class="flex items-center gap-2 pt-0.5">
-                        @if($v->evidence_image)
-                            <button type="button" onclick="openEvidenceModal('{{ $v->evidence_image }}')"
-                                class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition">
-                                View Photo
-                            </button>
-                        @endif
-                        <a href="{{ route('violations.manage', $v->uuid) }}"
-                            class="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-[#1f2937] text-white text-xs font-bold hover:bg-gray-800 transition">
-                            Manage
-                        </a>
-                    </div>
-                </div>
             @empty
                 <div class="px-4 py-14 text-center">
                     <div class="flex flex-col items-center">
@@ -472,7 +654,8 @@ new class extends Component {
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-[11px] uppercase tracking-[0.15em]">
+                    <tr
+                        class="bg-gray-50 border-b border-gray-200 text-gray-500 text-[11px] uppercase tracking-[0.15em]">
                         <th class="px-6 py-3.5 font-bold">Student</th>
                         <th class="px-6 py-3.5 font-bold">Offense</th>
                         <th class="px-6 py-3.5 font-bold">Reported By</th>
@@ -512,7 +695,7 @@ new class extends Component {
                                         <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
                                         <td class="px-6 py-5 text-center">
                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
+                                                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
                         ? 'bg-orange-100 text-orange-700'
                         : ($v->status === 'resolved'
                             ? 'bg-green-100 text-green-700'
@@ -540,7 +723,8 @@ new class extends Component {
                             <td colspan="5" class="px-4 py-16 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
                                         </svg>

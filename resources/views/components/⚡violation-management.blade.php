@@ -9,6 +9,41 @@ use Illuminate\Database\Eloquent\Builder;
 
 new class extends Component {
 
+    public string $office;
+
+    public function mount(): void
+    {
+        $this->office = match ((int) auth()->user()->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => abort(403),
+        };
+    }
+
+    #[On('echo-private:office.{office},.ViolationUpdated')]
+    public function refreshViolations($event = []): void
+    {
+        unset(
+            $this->summaryStats,
+            $this->totalViolations,
+            $this->pendingReview,
+            $this->majorIncidents,
+            $this->topOffenses,
+            $this->deptStats,
+            $this->violations
+        );
+
+        // Send the notification details to the browser.
+        $this->dispatch(
+            'show-violation-toast',
+            message: $event['message'] ?? 'A violation has been updated.',
+            student: $event['student'] ?? 'Student',
+            offense: $event['offense'] ?? 'Violation',
+            action: $event['action'] ?? 'updated'
+        );
+    }
+
     private function getUserOffice(): string
     {
         return match ((int) auth()->user()->role) {

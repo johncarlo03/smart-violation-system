@@ -113,7 +113,7 @@ class ViolationController extends Controller
 
         $user = auth()->user();
 
-        $status = match ($user->role) {
+        $status = match ((int) $user->role) {
             2, 3, 7 => 'pending_sao',
             5 => 'pending_chairman',
             6 => 'pending_dean',
@@ -122,7 +122,7 @@ class ViolationController extends Controller
             default => throw new \Exception('Unauthorized role to report a violation.'),
         };
 
-        Violation::create([
+        $violation = Violation::create([
             'student_id' => $student->id,
             'cso_id' => auth()->id(),
             'department_id' => $student->department_id,
@@ -133,7 +133,12 @@ class ViolationController extends Controller
             'status' => $status,
         ]);
 
-        ViolationUpdated::dispatch();
+        ViolationUpdated::dispatch(
+            $violation,
+            $this->officeForStatus($status),
+            'reported'
+        );
+
         return back()->with(
             'status',
             'Violation has been recorded successfully.'
@@ -143,7 +148,7 @@ class ViolationController extends Controller
     public function forward(Violation $violation)
     {
         $user = auth()->user();
-        
+
         if (
             $user->role == 6 &&
             $violation->status === 'pending_chairman'
@@ -152,7 +157,7 @@ class ViolationController extends Controller
                 'status' => 'pending_dean',
             ]);
 
-            ViolationUpdated::dispatch();
+            ViolationUpdated::dispatch($violation, 'dean', 'forwarded');
 
             return back()->with(
                 'success',
@@ -169,7 +174,7 @@ class ViolationController extends Controller
                 'status' => 'pending_sao',
             ]);
 
-            ViolationUpdated::dispatch();
+            ViolationUpdated::dispatch($violation, 'sao', 'forwarded');
 
             return back()->with(
                 'success',
@@ -227,6 +232,13 @@ class ViolationController extends Controller
         //         'violation' => 'This violation is not currently awaiting SAO review.',
         //     ]);
         // }
+        $expectedStatus = $this->getPendingStatus();
+
+        if ($violation->status !== $expectedStatus) {
+            return back()->withErrors([
+                'violation' => 'This violation is not currently assigned to your office.',
+            ]);
+        }
 
         $validated = $request->validate([
             'resolution_notes' => [
@@ -276,7 +288,7 @@ class ViolationController extends Controller
                 'reviewed_at' => now(),
             ]);
 
-        ViolationUpdated::dispatch();
+        ViolationUpdated::dispatch($violation, $office, 'updated');
 
         return back()->with(
             'success',
@@ -321,8 +333,22 @@ class ViolationController extends Controller
                 'reviewed_at' => now(),
             ]);
 
-        ViolationUpdated::dispatch();
+        ViolationUpdated::dispatch($violation, $office, 'updated');
 
         return back()->with('success', 'Violation has been dismissed.');
     }
+
+
+    private function officeForStatus(string $status): string
+    {
+        return match ($status) {
+            'pending_chairman' => 'chairman',
+            'pending_dean' => 'dean',
+            'pending_sao' => 'sao',
+            default => throw new \InvalidArgumentException(
+                "Unknown violation status: {$status}"
+            ),
+        };
+    }
+
 }

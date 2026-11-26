@@ -21,29 +21,6 @@ new class extends Component {
         };
     }
 
-    #[On('echo-private:office.{office},.ViolationUpdated')]
-    public function refreshViolations($event = []): void
-    {
-        unset(
-            $this->summaryStats,
-            $this->totalViolations,
-            $this->pendingReview,
-            $this->majorIncidents,
-            $this->topOffenses,
-            $this->deptStats,
-            $this->violations
-        );
-
-        // Send the notification details to the browser.
-        $this->dispatch(
-            'show-violation-toast',
-            message: $event['message'] ?? 'A violation has been updated.',
-            student: $event['student'] ?? 'Student',
-            offense: $event['offense'] ?? 'Violation',
-            action: $event['action'] ?? 'updated'
-        );
-    }
-
     private function getUserOffice(): string
     {
         return match ((int) auth()->user()->role) {
@@ -120,11 +97,33 @@ new class extends Component {
         return $this->summaryStats->major;
     }
 
-    #[On('echo:violations,ViolationUpdated')]
-    public function refreshViolations()
+
+
+    #[On('echo-private:office.{office},.ViolationUpdated')]
+    public function refreshViolations($event = []): void
     {
-        // The computed properties will be re-evaluated
+        // Refresh dashboard computed properties.
+        unset(
+            $this->summaryStats,
+            $this->totalViolations,
+            $this->pendingReview,
+            $this->majorIncidents,
+            $this->topOffenses,
+            $this->deptStats,
+            $this->violations
+        );
+
+        // Send the notification details to the browser.
+        $this->dispatch(
+            'show-violation-toast',
+            message: $event['message'] ?? 'A violation has been updated.',
+            student: $event['student'] ?? 'Student',
+            offense: $event['offense'] ?? 'Violation',
+            action: $event['action'] ?? 'updated'
+        );
     }
+
+
 
     #[Computed]
     public function topOffenses()
@@ -266,8 +265,8 @@ new class extends Component {
             role="group" aria-label="Time period">
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
-                    class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-1.5 text-xs font-bold rounded-lg whitespace-nowrap transition
-                        {{ $this->period === $key ? 'bg-[#1f2937] text-white shadow-xs' : 'text-gray-600 hover:bg-white hover:text-gray-900' }}">
+                    class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
+                                                                {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
             @endforeach
@@ -483,71 +482,59 @@ new class extends Component {
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     @forelse($this->violations as $v)
-                        @php
-                            $isPending = str_starts_with($v->status, 'pending_');
-                            $statusLabel = match ($v->status) {
-                                'pending_chairman' => 'Pending Chairman',
-                                'pending_dean' => 'Pending Dean',
-                                'pending_sao' => 'Pending SAO',
-                                'resolved' => 'Resolved',
-                                'dismissed' => 'Dismissed',
-                                default => ucfirst(str_replace('_', ' ', $v->status)),
-                            };
-                        @endphp
-                        <tr class="hover:bg-gray-50/70 transition duration-150">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3.5">
-                                    @if($v->student?->profile_photo)
-                                        <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
-                                            alt="{{ $v->student->name }}"
-                                            class="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0">
-                                    @else
-                                        <div class="w-10 h-10 rounded-full bg-[#1f2937] text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
-                                            {{ strtoupper(substr($v->student->name ?? '?', 0, 1)) }}
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <div class="font-bold text-sm text-gray-900">{{ $v->student->name ?? 'Unknown Student' }}</div>
-                                        <div class="text-xs text-gray-500 mt-0.5">
-                                            {{ $v->department->acronym ?? 'N/A' }} • {{ $v->student->id_number ?? 'No ID' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="font-bold text-sm text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
-                                @if($v->offense?->category)
-                                    <div class="inline-flex mt-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-bold tracking-wider">
-                                        {{ $v->offense->category }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600 font-medium">{{ $v->cso->name ?? 'Unknown' }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
-                                    {{ $isPending
-                                        ? 'bg-amber-100 text-amber-800'
-                                        : ($v->status === 'resolved'
-                                            ? 'bg-emerald-100 text-emerald-800'
-                                            : 'bg-red-100 text-red-800') }}">
-                                    {{ $statusLabel }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    @if($v->evidence_image)
-                                        <button type="button" onclick="openEvidenceModal('{{ $v->evidence_image }}')"
-                                            class="inline-flex items-center px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition">
-                                            View Photo
-                                        </button>
-                                    @endif
-                                    <a href="{{ route('violations.manage', $v->uuid) }}"
-                                        class="inline-flex items-center px-3.5 py-2 rounded-xl bg-[#1f2937] text-white text-xs font-bold hover:bg-gray-800 transition">
-                                        Manage
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                                    <tr class="hover:bg-indigo-50/40 transition duration-200">
+                                        <td class="px-6 py-5">
+                                            <div class="flex items-center gap-4">
+                                                @if($v->student->profile_photo)
+                                                    <img src="{{ asset('storage/' . $v->student->profile_photo) }}"
+                                                        class="w-12 h-12 rounded-full object-cover shadow-sm">
+                                                @else
+                                                    <div
+                                                        class="w-12 h-12 rounded-full {{ $v->department->badgeColor ?? 'bg-gray-100' }} flex items-center justify-center font-black text-sm shadow-sm">
+                                                        {{ strtoupper(substr($v->student->name, 0, 1)) }}
+                                                    </div>
+                                                @endif
+                                                <div>
+                                                    <div class="font-bold text-gray-900">{{ $v->student->name }}</div>
+                                                    <div class="text-xs text-gray-500 mt-1">{{ $v->department->acronym ?? 'N/A' }} •
+                                                        {{ $v->student->id_number }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5">
+                                            <div class="font-bold text-gray-800">{{ $v->offense->name ?? 'N/A' }}</div>
+                                            <div
+                                                class="inline-flex mt-2 px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-[10px] uppercase font-black tracking-wider">
+                                                {{ $v->offense->category ?? '' }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
+                                        <td class="px-6 py-5 text-center">
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
+                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
+                        ? 'bg-orange-100 text-orange-700'
+                        : ($v->status === 'resolved'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700') }}">
+                                                {{ $v->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-5 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                @if($v->evidence_image)
+                                                    <button onclick="openEvidenceModal('{{ $v->evidence_image }}')"
+                                                        class="inline-flex items-center px-3 py-2 rounded-xl bg-blue-100 text-blue-700 text-xs font-bold hover:bg-blue-200 transition">
+                                                        View Photo
+                                                    </button>
+                                                @endif
+                                                <a href="{{ route('violations.manage', $v->uuid) }}"
+                                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm transition">
+                                                    Manage
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
                     @empty
                         <tr>
                             <td colspan="5" class="px-4 py-16 text-center">

@@ -9,6 +9,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 new class extends Component {
 
+    public string $office;
+
+    public function mount(): void
+    {
+        $this->office = match ((int) auth()->user()->role) {
+            7 => 'dean',
+            6 => 'chairman',
+            3 => 'sao',
+            default => abort(403),
+        };
+    }
+
     private function getUserOffice(): string
     {
         return match ((int) auth()->user()->role) {
@@ -87,11 +99,31 @@ new class extends Component {
     }
 
 
-    #[On('echo:violations,ViolationUpdated')]
-    public function refreshViolations()
+
+    #[On('echo-private:office.{office},.ViolationUpdated')]
+    public function refreshViolations($event = []): void
     {
-        // The computed properties will be re-evaluated
+        // Refresh dashboard computed properties.
+        unset(
+            $this->summaryStats,
+            $this->totalViolations,
+            $this->pendingReview,
+            $this->majorIncidents,
+            $this->topOffenses,
+            $this->deptStats,
+            $this->violations
+        );
+
+        // Send the notification details to the browser.
+        $this->dispatch(
+            'show-violation-toast',
+            message: $event['message'] ?? 'A violation has been updated.',
+            student: $event['student'] ?? 'Student',
+            offense: $event['offense'] ?? 'Violation',
+            action: $event['action'] ?? 'updated'
+        );
     }
+
 
 
     #[Computed]
@@ -236,7 +268,7 @@ new class extends Component {
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                                                    {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                                                                {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
             @endforeach
@@ -382,7 +414,7 @@ new class extends Component {
                                         <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
                                         <td class="px-6 py-5 text-center">
                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                                                    {{ str_starts_with($v->status, 'pending_')
+                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
                         ? 'bg-orange-100 text-orange-700'
                         : ($v->status === 'resolved'
                             ? 'bg-green-100 text-green-700'

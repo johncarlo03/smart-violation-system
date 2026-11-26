@@ -12,6 +12,80 @@
             </a>
         </div>
     </x-slot> --}}
+
+<!-- Real-time Violation Notification -->
+<div
+    x-data="{
+        open: false,
+        message: '',
+        student: '',
+        offense: '',
+        action: '',
+        timer: null
+    }"
+    x-on:show-violation-toast.window="
+        message = $event.detail.message;
+        student = $event.detail.student;
+        offense = $event.detail.offense;
+        action = $event.detail.action;
+        open = true;
+        clearTimeout(timer);
+        timer = setTimeout(() => open = false, 5000);
+    "
+    x-show="open"
+    x-transition
+    x-cloak
+    class="fixed top-5 right-5 z-[100] w-full max-w-sm"
+>
+    <div class="bg-white rounded-2xl shadow-2xl border border-indigo-100 p-5">
+        <div class="flex items-start gap-3">
+
+            <div class="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+                <svg class="w-6 h-6 text-indigo-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+            </div>
+
+            <div class="flex-1 min-w-0">
+                <div class="font-black text-gray-800">
+                    {{ __('Violation Notification') }}
+                </div>
+
+                <p class="text-sm text-gray-600 mt-1" x-text="message"></p>
+
+                <div class="mt-3 text-xs text-gray-500 space-y-1">
+                    <p>
+                        <span class="font-bold">Student:</span>
+                        <span x-text="student"></span>
+                    </p>
+                    <p>
+                        <span class="font-bold">Offense:</span>
+                        <span x-text="offense"></span>
+                    </p>
+                </div>
+
+                <div class="text-[10px] text-indigo-600 font-bold uppercase mt-3"
+                    x-text="action">
+                </div>
+            </div>
+
+            <button
+                type="button"
+                x-on:click="open = false"
+                class="text-gray-400 hover:text-gray-700"
+                aria-label="Close notification">
+                &times;
+            </button>
+        </div>
+    </div>
+</div>
+
     <div class="py-10 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <livewire:violation-management />

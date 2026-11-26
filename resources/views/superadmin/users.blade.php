@@ -1,361 +1,322 @@
-{{-- <style>
-/* Pagination Container */
-nav[role="navigation"] {
-    display: flex;
-    justify-content: center;
-}
-
-/* All Buttons */
-nav[role="navigation"] a,
-nav[role="navigation"] span[aria-current="page"] span {
-    border-radius: 0.75rem !important;
-    margin: 0 2px;
-    font-weight: 500;
-}
-
-/* Normal Pages */
-nav[role="navigation"] a {
-    background: white !important;
-    color: #4b5563 !important;       /* gray-600 */
-    border: 1px solid #e5e7eb !important; /* gray-200 */
-}
-
-/* Hover */
-nav[role="navigation"] a:hover {
-    background: #eef2ff !important;  /* indigo-50 */
-    color: #4338ca !important;       /* indigo-700 */
-    border-color: #c7d2fe !important; /* indigo-200 */
-}
-
-/* Active Page */
-nav[role="navigation"] span[aria-current="page"] span {
-    background: #4f46e5 !important;  /* indigo-600 */
-    color: white !important;
-    border: 1px solid #4f46e5 !important;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-}
-
-/* Previous / Next */
-nav[role="navigation"] a[rel="prev"],
-nav[role="navigation"] a[rel="next"] {
-    background: white !important;
-    color: #4f46e5 !important;
-}
-
-/* Disabled Buttons */
-nav[role="navigation"] span.text-gray-500,
-nav[role="navigation"] span.text-gray-400 {
-    background: #f9fafb !important; /* gray-50 */
-    color: #9ca3af !important;      /* gray-400 */
-    border-radius: 0.75rem;
-    border-color: rgb(187, 187, 187);
-}
-</style> --}}
 <x-app-layout>
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+    <div class="min-h-screen bg-gray-50 flex flex-col md:flex-row">
 
         @include('layouts.superadmin-nav')
 
-        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto max-h-screen">
-            <main class="p-8 lg:p-10">
+        <div class="flex-1 flex flex-col min-w-0">
+            <main class="p-4 sm:p-6 lg:p-10">
 
-                <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h2 class="text-3xl font-black text-gray-800 tracking-tight">
-                            User Management
-                        </h2>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Create, view, and modify system users and role based access.
-                        </p>
-                    </div>
-                </div>
+                <div class="max-w-7xl mx-auto">
 
-                @if (session('success'))
-                    <div class="mb-6 p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 shadow-sm">
-                        <div
-                            class="w-8 h-8 rounded-xl bg-green-100 flex items-center justify-center text-green-600 shrink-0">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
+                    {{-- Header --}}
+                    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div class="min-w-0">
+                            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                                User Management
+                            </h2>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-1">
+                                Create, view, and modify system users and role based access.
+                            </p>
                         </div>
-                        <p class="text-sm font-semibold text-green-800">{{ session('success') }}</p>
-                    </div>
-                @endif
 
-                @if ($errors->any())
-                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-                    </div>
-                @endif
-
-                <div class="w-full bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-10">
-                    <div
-                        class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100/50 flex justify-between items-center">
-                        <h3 id="form-title" class="text-lg font-black text-gray-800">
-                            Register User
-                        </h3>
-                        <x-primary-button type="button" id="cancel-edit-btn"
-                            class="hidden">
-                            Cancel Edit
-                        </x-primary-button>
+                        {{-- Mobile Modal Trigger (Visible below md) --}}
+                        <button type="button" id="open-mobile-user-modal-btn"
+                            class="md:hidden w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1f2937] hover:bg-gray-800 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-xs transition shrink-0">
+                            <span>+ Register User</span>
+                        </button>
                     </div>
 
-                    <form id="user-form" action="{{ route('superadmin.users.store') }}" method="POST" class="p-6 space-y-6">
-                        @csrf
-                        <div id="method-container"></div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    Full Name
-                                </label>
-                                <input type="text" name="name" id="input-name" value="{{ old('name') }}" required
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                                @error('name')
-                                    <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
-                                @enderror
+                    {{-- Flash Success --}}
+                    @if (session('success'))
+                        <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 shadow-xs">
+                            <div class="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
                             </div>
+                            <p class="text-xs sm:text-sm font-semibold text-emerald-900 break-words">{{ session('success') }}</p>
+                        </div>
+                    @endif
 
-                            <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    ID Number:
-                                </label>
-                                <input type="number" name="id_number" id="input-id_number"
-                                    value="{{ old('id_number') }}" required
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                                @error('id_number')
-                                    <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
-                                @enderror
-                            </div>
+                    {{-- Validation Errors --}}
+                    @if ($errors->any())
+                        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-xs sm:text-sm text-red-700 space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <p class="break-words">{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    @endif
 
-                            <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    rfid(if applicable)
-                                </label>
-                                <input type="number" name="rfid_number" id="input-rfid_number"
-                                    value="{{ old('rfid_number') }}"
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                                @error('rfid_number')
-                                    <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            {{-- Institutional Email Address Input Field --}}
-                            <div>
-                                <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    Email
-                                </label>
-                                <input type="email" name="email" id="input-email" value="{{ old('email') }}" required
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                                @error('email')
-                                    <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
-                                @enderror
+                    {{-- Register / Edit User Card (Inline on md+, moved into #user-modal-body on mobile) --}}
+                    <div id="user-form-card" class="w-full bg-white rounded-2xl shadow-xs border border-gray-200/80 overflow-hidden mb-6 sm:mb-10">
+                        <div class="h-1 w-full bg-gradient-to-r from-red-700 to-amber-500"></div>
+                        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50/70 flex flex-wrap justify-between items-center gap-3">
+                            <h3 id="form-title" class="text-base sm:text-lg font-black text-gray-900">
+                                Register User
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="cancel-edit-btn"
+                                    class="hidden px-3.5 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wider transition">
+                                    Cancel Edit
+                                </button>
+                                <button type="button" id="close-mobile-user-modal-btn"
+                                    class="md:hidden w-8 h-8 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center text-xl leading-none transition"
+                                    aria-label="Close modal">&times;</button>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {{-- Account Security Access Password Input --}}
+                        <form id="user-form" action="{{ route('superadmin.users.store') }}" method="POST" class="p-4 sm:p-6 space-y-6">
+                            @csrf
+                            <div id="method-container"></div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                <div class="min-w-0">
+                                    <label class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        Full Name
+                                    </label>
+                                    <input type="text" name="name" id="input-name" value="{{ old('name') }}" required
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                    @error('name')
+                                        <p class="text-xs font-bold text-red-700 mt-1.5 pl-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="min-w-0">
+                                    <label class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        ID Number:
+                                    </label>
+                                    <input type="number" name="id_number" id="input-id_number"
+                                        value="{{ old('id_number') }}" required
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                    @error('id_number')
+                                        <p class="text-xs font-bold text-red-700 mt-1.5 pl-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="min-w-0">
+                                    <label class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        RFID (if applicable)
+                                    </label>
+                                    <input type="number" name="rfid_number" id="input-rfid_number"
+                                        value="{{ old('rfid_number') }}"
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                    @error('rfid_number')
+                                        <p class="text-xs font-bold text-red-700 mt-1.5 pl-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- Institutional Email Address Input Field --}}
+                                <div class="min-w-0">
+                                    <label class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        Email
+                                    </label>
+                                    <input type="email" name="email" id="input-email" value="{{ old('email') }}" required
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                    @error('email')
+                                        <p class="text-xs font-bold text-red-700 mt-1.5 pl-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                {{-- Account Security Access Password Input --}}
+                                <div class="min-w-0">
+                                    <label id="password-label"
+                                        class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        Password
+                                    </label>
+                                    <input type="password" name="password" id="input-password" required
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                    @error('password')
+                                        <p class="text-xs font-bold text-red-700 mt-1.5 pl-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- Confirm Password Input Field --}}
+                                <div class="min-w-0">
+                                    <label id="password-confirm-label"
+                                        class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-2">
+                                        Confirm Password
+                                    </label>
+                                    <input type="password" name="password_confirmation" id="input-password_confirmation"
+                                        required
+                                        class="w-full rounded-xl border-gray-200 text-base sm:text-sm font-medium text-gray-800 shadow-xs focus:border-[#1f2937] focus:ring-[#1f2937] transition duration-200">
+                                </div>
+                            </div>
+
+                            <hr class="border-gray-100">
+
+                            {{-- Structural Role Assignment Radio Nodes --}}
                             <div>
-                                <label id="password-label"
-                                    class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    Password
+                                <label class="block text-xs font-black uppercase tracking-wider text-gray-600 mb-3">
+                                    User Roles
                                 </label>
-                                <input type="password" name="password" id="input-password" required
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                                @error('password')
-                                    <p class="text-xs font-bold text-red-500 mt-1.5 pl-1">{{ $message }}</p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="1" {{ old('role') == '1' ? 'checked' : '' }} class="h-4 w-4 text-[#1f2937] border-gray-300 focus:ring-[#1f2937]">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-[#1f2937]">Student</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents & data</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="2" {{ old('role') == '2' ? 'checked' : '' }} class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-amber-600">CSO Officer</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents & data</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="6" {{ old('role') == '6' ? 'checked' : '' }} class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-amber-600">Chairman</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents & data</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="7" {{ old('role') == '7' ? 'checked' : '' }} class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-amber-600">Dean</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents & data</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="5" {{ old('role') == '5' ? 'checked' : '' }} class="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-amber-600">Teaching Staff</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents & data</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="3" {{ old('role') == '3' ? 'checked' : '' }} class="h-4 w-4 text-emerald-700 border-gray-300 focus:ring-emerald-600">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-emerald-700">SAO Faculty</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Manages system scopes</span>
+                                        </div>
+                                    </label>
+
+                                    <label
+                                        class="relative flex items-start p-3.5 sm:p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200 min-w-0">
+                                        <div class="flex items-center h-5 shrink-0">
+                                            <input type="radio" name="role" value="4" {{ old('role') == '4' ? 'checked' : '' }} class="h-4 w-4 text-red-700 border-gray-300 focus:ring-red-700">
+                                        </div>
+                                        <div class="ml-3 min-w-0">
+                                            <span class="block text-xs font-black uppercase tracking-wider text-red-700">Super Admin</span>
+                                            <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Complete root control</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                @error('role')
+                                    <p class="text-xs font-bold text-red-700 mt-2 pl-1">{{ $message }}</p>
                                 @enderror
-                            </div>
 
-                            {{-- Confirm Password Input Field --}}
-                            <div>
-                                <label id="password-confirm-label"
-                                    class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-2">
-                                    Confirm Password
-                                </label>
-                                <input type="password" name="password_confirmation" id="input-password_confirmation"
-                                    required
-                                    class="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition duration-200">
-                            </div>
-                        </div>
-
-                        <hr class="border-gray-100">
-
-                        {{-- Structural Role Assignment Radio Nodes --}}
-                        <div>
-                            <label class="block text-xs font-black uppercase tracking-[0.15em] text-black-200 mb-3">
-                                User Roles
-                            </label>
-
-                            <div class="grid grid-cols-2 md:grid-cols-7 gap-4">
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="1" {{ old('role') == '1' ? 'checked' : '' }} class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-blue-600">Student</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
-                                            & data</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="2" {{ old('role') == '2' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">CSO
-                                            Officer</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
-                                            & data</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="6" {{ old('role') == '6' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Chairman</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
-                                            & data</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="7" {{ old('role') == '7' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Dean</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
-                                            & data</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="5" {{ old('role') == '5' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-orange-600">Teaching Staff</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Logs incidents
-                                            & data</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="3" {{ old('role') == '3' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-green-600">SAO
-                                            Faculty</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Manages system
-                                            scopes</span>
-                                    </div>
-                                </label>
-
-                                <label
-                                    class="relative flex items-start p-4 rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition duration-200">
-                                    <div class="flex items-center h-5">
-                                        <input type="radio" name="role" value="4" {{ old('role') == '4' ? 'checked' : '' }} class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
-                                    </div>
-                                    <div class="ml-3">
-                                        <span
-                                            class="block text-xs font-black uppercase tracking-wider text-indigo-600">Super
-                                            Admin</span>
-                                        <span class="block text-[11px] font-medium text-gray-400 mt-0.5">Complete root
-                                            control</span>
-                                    </div>
-                                </label>
-                            </div>
-                            @error('role')
-                                <p class="text-xs font-bold text-red-500 mt-2 pl-1">{{ $message }}</p>
-                            @enderror
-
-                            <div id="student-fields" class="hidden mt-6">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div id="department-field">
-                                        <label
-                                            class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
-                                            Department
-                                        </label>
-                                        <select id="department" name="department_id"
-                                            class="w-full rounded-xl border-gray-200">
-                                            <option value="">Select Department</option>
-                                            @foreach($departments as $department)
-                                                <option
-                                                    value="{{ $department->id }}"
-                                                    {{ old('department_id') == $department->id ? 'selected' : '' }}
-                                                >
-                                                    {{ $department->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                        <div id="student-extra-fields" class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
-                                                    Course
-                                                </label>
-                                                <select id="course" name="course_id" disabled
-                                                    class="w-full rounded-xl border-gray-200">
-                                                    <option value="">Select Department First</option>
-                                                </select>
-                                            </div>
-                                            <div>
+                                <div id="student-fields" class="hidden mt-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                                        <div id="department-field" class="min-w-0">
                                             <label
-                                                class="block text-xs font-black uppercase tracking-[0.15em] text-gray-400 mb-2">
-                                                Year Level
+                                                class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+                                                Department
                                             </label>
-                                            <select id="year_level" name="year_level" class="w-full rounded-xl border-gray-200">
-                                                <option value="">Select Year</option>
-                                                @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
-                                                    <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
-                                                        {{ $label }}
+                                            <select id="department" name="department_id"
+                                                class="w-full rounded-xl border-gray-200 text-base sm:text-sm text-gray-800 focus:border-[#1f2937] focus:ring-[#1f2937]">
+                                                <option value="">Select Department</option>
+                                                @foreach($departments as $department)
+                                                    <option
+                                                        value="{{ $department->id }}"
+                                                        {{ old('department_id') == $department->id ? 'selected' : '' }}
+                                                    >
+                                                        {{ $department->name }}
                                                     </option>
                                                 @endforeach
                                             </select>
                                         </div>
+
+                                        <div id="student-extra-fields" class="col-span-1 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                            <div class="min-w-0">
+                                                <label
+                                                    class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+                                                    Course
+                                                </label>
+                                                <select id="course" name="course_id" disabled
+                                                    class="w-full rounded-xl border-gray-200 text-base sm:text-sm text-gray-800 focus:border-[#1f2937] focus:ring-[#1f2937]">
+                                                    <option value="">Select Department First</option>
+                                                </select>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <label
+                                                    class="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
+                                                    Year Level
+                                                </label>
+                                                <select id="year_level" name="year_level"
+                                                    class="w-full rounded-xl border-gray-200 text-base sm:text-sm text-gray-800 focus:border-[#1f2937] focus:ring-[#1f2937]">
+                                                    <option value="">Select Year</option>
+                                                    @foreach([1 => '1st Year', 2 => '2nd Year', 3 => '3rd Year', 4 => '4th Year'] as $value => $label)
+                                                        <option value="{{ $value }}" {{ old('year_level') == $value ? 'selected' : '' }}>
+                                                            {{ $label }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                    
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Interface Commit Form Submission Panel --}}
-                        <div class="pt-4 border-t border-gray-100 flex justify-end">
-                            <x-primary-button type="submit" id="submit-btn"
-                                class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black uppercase tracking-widest transition duration-200 shadow-md hover:shadow-lg active:scale-[0.98]">
-                                Register User
-                            </x-primary-button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="w-full bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100/50">
-                        <h3 class="text-lg font-black text-gray-800">Active Users</h3>
+                            {{-- Interface Commit Form Submission Panel --}}
+                            <div class="pt-4 border-t border-gray-100 flex justify-end">
+                                <button type="submit" id="submit-btn"
+                                    class="w-full sm:w-auto px-6 py-3 bg-[#1f2937] hover:bg-gray-800 text-white rounded-xl text-xs font-black uppercase tracking-widest transition duration-200 shadow-xs active:scale-[0.99]">
+                                    Register User
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <livewire:user-table />  {{-- v4 syntax --}}
+
+                    {{-- Anchor & Wrapper for Moving Form Card on Mobile --}}
+                    <div id="desktop-user-form-slot" class="hidden md:block"></div>
+
+                    {{-- Mobile Dialog Host for #user-form-card --}}
+                    <dialog id="user-form-modal"
+                        class="backdrop:bg-gray-900/60 rounded-2xl p-0 w-[calc(100%-1.5rem)] max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200/80 m-auto bg-transparent">
+                        <div id="mobile-user-form-slot"></div>
+                    </dialog>
+
+                    {{-- Active Users Table Container --}}
+                    <div class="w-full bg-white rounded-2xl shadow-xs border border-gray-200/80 overflow-hidden">
+                        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gray-50/70">
+                            <h3 class="text-base sm:text-lg font-black text-gray-900">Active Users</h3>
+                        </div>
+
+                        <div class="min-w-0">
+                            <livewire:user-table />
+                        </div>
+                    </div>
+
+                </div>
 
             </main>
         </div>
@@ -373,6 +334,12 @@ nav[role="navigation"] span.text-gray-400 {
 
         // Form elements for mutating state (Create vs Edit)
         const userForm = document.getElementById('user-form');
+        const userFormCard = document.getElementById('user-form-card');
+        const desktopSlot = document.getElementById('desktop-user-form-slot');
+        const mobileSlot = document.getElementById('mobile-user-form-slot');
+        const mobileModal = document.getElementById('user-form-modal');
+        const openMobileBtn = document.getElementById('open-mobile-user-modal-btn');
+        const closeMobileBtn = document.getElementById('close-mobile-user-modal-btn');
         const formTitle = document.getElementById('form-title');
         const submitBtn = document.getElementById('submit-btn');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
@@ -389,28 +356,78 @@ nav[role="navigation"] span.text-gray-400 {
 
         const courses = @json($courses);
         const storeRoute = "{{ route('superadmin.users.store') }}";
+        const mdQuery = window.matchMedia('(min-width: 768px)');
 
-        // Handle structural role logic toggles
-        
-    function toggleRoleFields(roleValue) {
-        const extra = document.getElementById('student-extra-fields');
-        const isStudent = roleValue == '1';
-        const needsDepartment = isStudent || ['1', '5', '6', '7'].includes(String(roleValue));
+        function syncFormPlacement() {
+            if (!userFormCard || !desktopSlot || !mobileSlot) return;
 
-        studentFields.classList.toggle('hidden', !needsDepartment);
-        extra.classList.toggle('hidden', !isStudent);
-
-        department.disabled = !needsDepartment;
-        if (!needsDepartment) department.value = '';
-
-        yearLevel.disabled = !isStudent;
-        if (!isStudent) {
-            yearLevel.value = '';
-            course.value = '';
-            course.disabled = true;
+            if (mdQuery.matches) {
+                if (mobileModal && mobileModal.open) {
+                    mobileModal.close();
+                }
+                userFormCard.classList.remove('mb-0');
+                userFormCard.classList.add('mb-10');
+                desktopSlot.appendChild(userFormCard);
+            } else {
+                userFormCard.classList.remove('mb-10');
+                userFormCard.classList.add('mb-0');
+                mobileSlot.appendChild(userFormCard);
+            }
         }
-    }
 
+        function openMobileFormModal() {
+            syncFormPlacement();
+            if (!mdQuery.matches && mobileModal && !mobileModal.open) {
+                mobileModal.showModal();
+            }
+        }
+
+        function closeMobileFormModal() {
+            if (mobileModal && mobileModal.open) {
+                mobileModal.close();
+            }
+        }
+
+        syncFormPlacement();
+        mdQuery.addEventListener('change', syncFormPlacement);
+
+        if (openMobileBtn) {
+            openMobileBtn.addEventListener('click', function () {
+                resetFormState();
+                openMobileFormModal();
+            });
+        }
+
+        if (closeMobileBtn) {
+            closeMobileBtn.addEventListener('click', closeMobileFormModal);
+        }
+
+        if (mobileModal) {
+            mobileModal.addEventListener('click', function (event) {
+                if (event.target === mobileModal) {
+                    closeMobileFormModal();
+                }
+            });
+        }
+
+        function toggleRoleFields(roleValue) {
+            const extra = document.getElementById('student-extra-fields');
+            const isStudent = roleValue == '1';
+            const needsDepartment = isStudent || ['1', '5', '6', '7'].includes(String(roleValue));
+
+            studentFields.classList.toggle('hidden', !needsDepartment);
+            extra.classList.toggle('hidden', !isStudent);
+
+            department.disabled = !needsDepartment;
+            if (!needsDepartment) department.value = '';
+
+            yearLevel.disabled = !isStudent;
+            if (!isStudent) {
+                yearLevel.value = '';
+                course.value = '';
+                course.disabled = true;
+            }
+        }
 
         roleRadios.forEach(radio => {
             radio.addEventListener('change', function () {
@@ -418,12 +435,10 @@ nav[role="navigation"] span.text-gray-400 {
             });
         });
 
-        // Handle cascading dynamic dropdowns (Department -> Course)
-        department.addEventListener('change', function (e, selectedCourseId = null) {
+        function loadCourses(departmentId, selectedCourseId = null) {
             course.innerHTML = '';
-            let selected = this.value;
 
-            if (!selected) {
+            if (!departmentId) {
                 course.disabled = true;
                 course.innerHTML = '<option value="">Select Department First</option>';
                 return;
@@ -432,123 +447,101 @@ nav[role="navigation"] span.text-gray-400 {
             course.disabled = false;
             course.innerHTML = '<option value="">Select Course</option>';
 
-            if (courses[selected]) {
-                courses[selected].forEach(function (item) {
-                    let option = document.createElement('option');
-                    option.value = item.id;
-                    option.textContent = item.name;
-                    if (selectedCourseId && item.id == selectedCourseId) {
-                        option.selected = true;
-                    }
-                    course.appendChild(option);
-                });
+            (courses[departmentId] || []).forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                if (selectedCourseId && item.id == selectedCourseId) {
+                    option.selected = true;
+                }
+                course.appendChild(option);
+            });
+        }
+
+        department.addEventListener('change', function () {
+            loadCourses(this.value);
+        });
+
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.edit-user-btn');
+            if (!button) return;
+
+            const data = button.dataset;
+
+            formTitle.textContent = "Edit User: " + data.name;
+            submitBtn.textContent = "Update User";
+            cancelEditBtn.classList.remove('hidden');
+
+            userForm.action = `/superadmin/users/${data.id}`;
+            methodContainer.innerHTML = '@method("PUT")';
+
+            inputName.value = data.name;
+            inputIdNumber.value = data.id_number;
+            inputRfidNumber.value = data.rfid_number;
+            inputEmail.value = data.email;
+
+            inputPassword.required = false;
+            inputPasswordConfirm.required = false;
+            passwordLabel.textContent = "Password (Leave blank to keep current)";
+
+            roleRadios.forEach(radio => {
+                if (radio.value == data.role) {
+                    radio.checked = true;
+                    toggleRoleFields(data.role);
+                }
+            });
+
+            if (['1', '5', '6', '7'].includes(String(data.role))) {
+                department.value = data.department_id;
+            }
+
+            if (data.role == '1') {
+                loadCourses(data.department_id, data.course_id);
+                yearLevel.value = data.year_level;
+            }
+
+            if (!mdQuery.matches) {
+                openMobileFormModal();
+            } else {
+                userForm.scrollIntoView({ behavior: 'smooth' });
             }
         });
-        
-        function loadCourses(departmentId, selectedCourseId = null) {
-    course.innerHTML = '';
 
-    if (!departmentId) {
-        course.disabled = true;
-        course.innerHTML = '<option value="">Select Department First</option>';
-        return;
-    }
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.delete-user-btn');
+            if (!button) return;
 
-    course.disabled = false;
-    course.innerHTML = '<option value="">Select Course</option>';
+            const userId = button.dataset.id;
+            const userName = button.dataset.name;
+            const deleteForm = document.getElementById('global-delete-form');
 
-    (courses[departmentId] || []).forEach(function (item) {
-        const option = document.createElement('option');
-        option.value = item.id;
-        option.textContent = item.name;
-        if (selectedCourseId && item.id == selectedCourseId) {
-            option.selected = true;
-        }
-        course.appendChild(option);
-    });
-}
-
-department.addEventListener('change', function () {
-    loadCourses(this.value);
-});
-        document.querySelectorAll('.edit-user-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const data = this.dataset;
-
-                formTitle.textContent = "Edit User: " + data.name;
-                submitBtn.textContent = "Update User";
-                cancelEditBtn.classList.remove('hidden');
-
-                userForm.action = `/superadmin/users/${data.id}`;
-                methodContainer.innerHTML = '@method("PUT")';
-
-                inputName.value = data.name;
-                inputIdNumber.value = data.id_number;
-                inputRfidNumber.value = data.rfid_number;
-                inputEmail.value = data.email;
-
-                inputPassword.required = false;
-                inputPasswordConfirm.required = false;
-                passwordLabel.textContent = "Password (Leave blank to keep current)";
-
-                // 4. Check matching role radio box
-                roleRadios.forEach(radio => {
-                    if (radio.value == data.role) {
-                        radio.checked = true;
-                        toggleRoleFields(data.role);
-                    }
-                });
-
-                // 5. Build dropdown selections out if student layout tier applies
-                if (['1', '5', '6', '7'].includes(String(data.role))) {
-                    department.value = data.department_id;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `You are about to permanently delete ${userName}. This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#b91c1c',
+                cancelButtonColor: '#4b5563',
+                confirmButtonText: 'Yes, delete them!',
+                cancelButtonText: 'Cancel',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-2xl',
+                    confirmButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider',
+                    cancelButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider'
                 }
-
-                if (data.role == '1') {
-                    loadCourses(data.department_id, data.course_id);
-                    yearLevel.value = data.year_level;
+            }).then((result) => {
+                if (result.isConfirmed && deleteForm) {
+                    deleteForm.action = `/superadmin/users/${userId}`;
+                    deleteForm.submit();
                 }
-
-                // Scroll smoothly up to form panel
-                userForm.scrollIntoView({ behavior: 'smooth' });
             });
         });
 
-        // ================== SWEETALERT DETONATION LOGIC ==================
-        document.querySelectorAll('.delete-user-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const userId = this.dataset.id;
-                const userName = this.dataset.name;
-                const deleteForm = document.getElementById('global-delete-form');
-
-                Swal.fire({
-                    title: 'Are you sure?',
-                    text: `You are about to permanently delete ${userName}. This action cannot be undone!`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Yes, delete them!',
-                    cancelButtonText: 'Cancel',
-                    background: '#ffffff',
-                    customClass: {
-                        popup: 'rounded-2xl',
-                        confirmButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider',
-                        cancelButton: 'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-
-                        deleteForm.action = `/superadmin/users/${userId}`;
-
-                        deleteForm.submit();
-                    }
-                });
-            });
+        cancelEditBtn.addEventListener('click', function () {
+            resetFormState();
+            closeMobileFormModal();
         });
-
-        // Cancel editing mode function reset state back cleanly
-        cancelEditBtn.addEventListener('click', resetFormState);
 
         function resetFormState() {
             userForm.reset();
@@ -568,6 +561,7 @@ department.addEventListener('change', function () {
         const oldRole = "{{ old('role') }}";
         const oldDepartment = "{{ old('department_id') }}";
         const oldCourse = "{{ old('course_id') }}";
+        const hasValidationOrOldInput = {{ ($errors->any() || old('name') || old('email') || old('role')) ? 'true' : 'false' }};
 
         if (oldRole) {
             toggleRoleFields(oldRole);
@@ -575,6 +569,10 @@ department.addEventListener('change', function () {
 
         if (oldRole == '1' && oldDepartment) {
             loadCourses(oldDepartment, oldCourse);
+        }
+
+        if (!mdQuery.matches && hasValidationOrOldInput) {
+            openMobileFormModal();
         }
     });
 </script>

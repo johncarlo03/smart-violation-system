@@ -2,16 +2,21 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
+// Chairman and Dean: only their own department.
+Broadcast::channel(
+    'office.{office}.department.{department}',
+    function ($user, $office, $department) {
+        $allowedOffices = [
+            7 => 'dean',
+            6 => 'chairman',
+        ];
 
-Broadcast::channel('office.{office}', function ($user, $office) {
-    $allowedOffices = [
-        7 => 'dean',
-        6 => 'chairman',
-        3 => 'sao',
-    ];
+        return ($allowedOffices[(int) $user->role] ?? null) === $office
+            && (int) $user->department_id === (int) $department;
+    }
+);
 
-    return ($allowedOffices[(int) $user->role] ?? null) === $office;
+// SAO: all departments.
+Broadcast::channel('office.sao', function ($user) {
+    return (int) $user->role === 3;
 });

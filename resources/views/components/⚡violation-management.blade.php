@@ -11,14 +11,29 @@ new class extends Component {
 
     public string $office;
 
+    public ?int $departmentId = null;
+
     public function mount(): void
     {
-        $this->office = match ((int) auth()->user()->role) {
+        $user = auth()->user();
+
+        $this->office = match ((int) $user->role) {
             7 => 'dean',
             6 => 'chairman',
             3 => 'sao',
             default => abort(403),
         };
+
+        $this->departmentId = $user->department_id
+            ? (int) $user->department_id
+            : null;
+
+        if (
+            in_array($this->office, ['chairman', 'dean'], true)
+            && $this->departmentId === null
+        ) {
+            abort(403, 'Your account has no assigned department.');
+        }
     }
 
     private function getUserOffice(): string
@@ -99,10 +114,28 @@ new class extends Component {
 
 
 
-    #[On('echo-private:office.{office},.ViolationUpdated')]
-    public function refreshViolations($event = []): void
+    #[On('echo-private:office.{office}.department.{departmentId},.ViolationUpdated')]
+    public function refreshDepartmentViolations($event = []): void
     {
-        // Refresh dashboard computed properties.
+        if (!in_array($this->office, ['chairman', 'dean'], true)) {
+            return;
+        }
+
+        $this->refreshDashboard($event);
+    }
+
+    #[On('echo-private:office.sao,.ViolationUpdated')]
+    public function refreshSaoViolations($event = []): void
+    {
+        if ($this->office !== 'sao') {
+            return;
+        }
+
+        $this->refreshDashboard($event);
+    }
+
+    private function refreshDashboard(array $event = []): void
+    {
         unset(
             $this->summaryStats,
             $this->totalViolations,
@@ -111,9 +144,10 @@ new class extends Component {
             $this->topOffenses,
             $this->deptStats,
             $this->violations,
+            $this->notifications,
+            $this->unreadNotificationCount
         );
 
-        // Send the notification details to the browser.
         $this->dispatch(
             'show-violation-toast',
             message: $event['message'] ?? 'A violation has been updated.',
@@ -237,16 +271,36 @@ new class extends Component {
         $pendingStatus = $this->getPendingStatus();
 
         return Violation::query()
+
+            // Chairman and Dean can only access their department.
+            ->when(
+                in_array($office, ['chairman', 'dean'], true),
+                fn($query) => $query->where(
+                    'violations.department_id',
+                    $this->departmentId
+                )
+            )
+
+            // Keep your existing office-specific status filtering.
             ->where(function ($query) use ($office, $pendingStatus) {
                 $query->where('violations.status', $pendingStatus)
                     ->orWhere(function ($query) use ($office) {
-                        $query->whereIn('violations.status', ['dismissed', 'resolved'])
+                        $query->whereIn(
+                            'violations.status',
+                            ['dismissed', 'resolved']
+                        )
                             ->where('violations.resolved_by', $office);
                     });
             })
+
+            // Keep your existing period filtering.
             ->when(
                 $this->periodStart,
-                fn($q, $start) => $q->where('violations.created_at', '>=', $start)
+                fn($query, $start) => $query->where(
+                    'violations.created_at',
+                    '>=',
+                    $start
+                )
             );
     }
 
@@ -254,7 +308,6 @@ new class extends Component {
 ?>
 
 <div class="space-y-6">
-<livewire:notification-bell />
 
     {{-- Period Filter Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -267,7 +320,7 @@ new class extends Component {
             @foreach(['day' => 'Today', 'week' => 'Week', 'month' => 'Month', 'year' => 'Year', 'all' => 'All'] as $key => $label)
                 <button type="button" wire:click="setPeriod('{{ $key }}')"
                     class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition
-                                                                                {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
+                                                                                            {{ $this->period === $key ? 'bg-indigo-600 text-white shadow' : 'text-gray-600 hover:bg-gray-100' }}">
                     {{ $label }}
                 </button>
             @endforeach
@@ -325,7 +378,7 @@ new class extends Component {
     </div>
 
     {{-- Analytics Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+    <div class="grid grid-cols-1 {{ $office === 'sao' ? 'md:grid-cols-2' : '' }} gap-4 sm:gap-6">
         <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
             <h3 class="font-bold text-gray-900 mb-5 text-base sm:text-lg">Top 5 Common Violations</h3>
             <div class="space-y-4">
@@ -349,24 +402,26 @@ new class extends Component {
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
-            <h3 class="font-bold text-gray-900 mb-5 text-base sm:text-lg text-center">Reports by Department</h3>
-            <div class="flex items-end justify-around gap-2 h-48 sm:h-52 pt-4">
-                @php $maxDeptTotal = $this->deptStats->max('total') ?? 0; @endphp
-                @foreach($this->deptStats as $dept)
-                    <div class="flex flex-col items-center flex-1 min-w-0">
-                        <div class="bg-gradient-to-t {{ $dept->barColor }} w-10 sm:w-14 rounded-t-xl transition-all duration-300"
-                            style="height: {{ $maxDeptTotal > 0 ? max(($dept->total / $maxDeptTotal) * 130, $dept->total > 0 ? 8 : 0) : 0 }}px">
+        @if ($office === 'sao')
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
+                <h3 class="font-bold text-gray-900 mb-5 text-base sm:text-lg text-center">Reports by Department</h3>
+                <div class="flex items-end justify-around gap-2 h-48 sm:h-52 pt-4">
+                    @php $maxDeptTotal = $this->deptStats->max('total') ?? 0; @endphp
+                    @foreach($this->deptStats as $dept)
+                        <div class="flex flex-col items-center flex-1 min-w-0">
+                            <div class="bg-gradient-to-t {{ $dept->barColor }} w-10 sm:w-14 rounded-t-xl transition-all duration-300"
+                                style="height: {{ $maxDeptTotal > 0 ? max(($dept->total / $maxDeptTotal) * 130, $dept->total > 0 ? 8 : 0) : 0 }}px">
+                            </div>
+                            <span
+                                class="text-[11px] mt-2.5 font-bold text-gray-700 text-center uppercase tracking-wide truncate w-full">
+                                {{ $dept->acronym }}
+                            </span>
+                            <span class="text-xs text-gray-500 font-semibold">{{ $dept->total }}</span>
                         </div>
-                        <span
-                            class="text-[11px] mt-2.5 font-bold text-gray-700 text-center uppercase tracking-wide truncate w-full">
-                            {{ $dept->acronym }}
-                        </span>
-                        <span class="text-xs text-gray-500 font-semibold">{{ $dept->total }}</span>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     {{-- Recent Violation Queue --}}
@@ -421,7 +476,7 @@ new class extends Component {
                             </div>
 
                             <span class="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase
-                                                            {{ $isPending
+                                                                                    {{ $isPending
                 ? 'bg-amber-100 text-amber-800'
                 : ($v->status === 'resolved'
                     ? 'bg-emerald-100 text-emerald-800'
@@ -522,7 +577,7 @@ new class extends Component {
                                         <td class="px-6 py-5 text-sm text-gray-600 font-medium">{{ $v->cso->name }}</td>
                                         <td class="px-6 py-5 text-center">
                                             <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border
-                                                                                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
+                                                                                                                                                                                                                                                    {{ str_starts_with($v->status, 'pending_')
                         ? 'bg-orange-100 text-orange-700'
                         : ($v->status === 'resolved'
                             ? 'bg-green-100 text-green-700'

@@ -39,20 +39,48 @@ class ViolationController extends Controller
         $office = $this->getUserOffice();
         $pendingStatus = $this->getPendingStatus();
 
-        $totalViolations = Violation::where(function ($query) use ($pendingStatus, $office) {
-            $query->where('status', $pendingStatus)
-                ->orWhere(function ($query) use ($office) {
-                    $query->whereIn('status', ['dismissed', 'resolved'])
-                        ->where('resolved_by', $office);
-                });
-        })->count();
+        $user = auth()->user();
+        $departmentId = $user->department_id;
 
-        $pendingReview = Violation::where('status', $pendingStatus)
+        $filterByDepartment = in_array($office, ['dean', 'chairman'], true);
+
+        if ($filterByDepartment && !$departmentId) {
+            abort(403, 'Your account has no assigned department.');
+        }
+
+        // Dean and Chairman must have an assigned department.
+        $filterByDepartment = in_array($office, ['dean', 'chairman'], true);
+
+        $totalViolations = Violation::query()
+            ->when(
+                $filterByDepartment,
+                fn($query) => $query->where('department_id', $departmentId)
+            )
+            ->where(function ($query) use ($pendingStatus, $office) {
+                $query->where('status', $pendingStatus)
+                    ->orWhere(function ($query) use ($office) {
+                        $query->whereIn('status', ['dismissed', 'resolved'])
+                            ->where('resolved_by', $office);
+                    });
+            })
             ->count();
 
-        $majorIncidents = Violation::whereHas('offense', function ($query) {
-            $query->whereIn('category', ['Serious', 'Very Serious']);
-        })
+        $pendingReview = Violation::query()
+            ->when(
+                $filterByDepartment,
+                fn($query) => $query->where('department_id', $departmentId)
+            )
+            ->where('status', $pendingStatus)
+            ->count();
+
+        $majorIncidents = Violation::query()
+            ->when(
+                $filterByDepartment,
+                fn($query) => $query->where('department_id', $departmentId)
+            )
+            ->whereHas('offense', function ($query) {
+                $query->whereIn('category', ['Serious', 'Very Serious']);
+            })
             ->where('status', $pendingStatus)
             ->count();
 
@@ -385,14 +413,21 @@ class ViolationController extends Controller
         if ($role === null) {
             return;
         }
+        $users = User::where('role', $role);
 
-        User::where('role', $role)
-            ->get()
-            ->each(function ($user) use ($violation, $action) {
-                $user->notify(
-                    new ViolationAssigned($violation, $action)
-                );
-            });
+        // Chairman and Dean only receive notifications
+        // for violations belonging to their department.
+        if (in_array($office, ['chairman', 'dean'])) {
+            $users->where('department_id', $violation->department_id);
+        }
+
+
+
+        $users->get()->each(function ($user) use ($violation, $action) {
+            $user->notify(
+                new ViolationAssigned($violation, $action)
+            );
+        });
     }
 
 }

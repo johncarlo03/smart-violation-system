@@ -42,6 +42,9 @@
 
             <!-- Settings Dropdown (Desktop) -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0">
+                @if(in_array((int) $navUser->role, [3, 6, 7]))
+                    <livewire:notification-bell />
+                @endif
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button type="button"

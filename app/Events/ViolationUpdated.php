@@ -23,8 +23,17 @@ class ViolationUpdated implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
+        if ($this->office === 'sao') {
+            return [
+                new PrivateChannel('office.sao'),
+            ];
+        }
+
         return [
-            new PrivateChannel('office.' . $this->office),
+            new PrivateChannel(
+                'office.' . $this->office .
+                '.department.' . $this->violation->department_id
+            ),
         ];
     }
 

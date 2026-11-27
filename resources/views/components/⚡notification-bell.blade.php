@@ -6,69 +6,118 @@ use Livewire\Attributes\On;
 
 new class extends Component {
 
-    public string $office;
+    public string $office = '';
+    public ?int $departmentId = null;
 
     public function mount(): void
     {
-        $this->office = match ((int) auth()->user()->role) {
+        $user = auth()->user();
+
+        $this->office = match ((int) $user->role) {
             7 => 'dean',
             6 => 'chairman',
             3 => 'sao',
-            default => abort(403),
+            default => abort(403, 'Unauthorized access.'),
         };
+
+        $this->departmentId = $user->department_id
+            ? (int) $user->department_id
+            : null;
+
+        if (
+            in_array($this->office, ['dean', 'chairman'], true)
+            && $this->departmentId === null
+        ) {
+            abort(403, 'Your account has no assigned department.');
+        }
     }
 
     #[Computed]
     public function notifications()
     {
-        return auth()->user()->notifications()->latest()->take(10)->get();
+        return auth()->user()
+            ->notifications()
+            ->latest()
+            ->take(10)
+            ->get();
     }
 
     #[Computed]
     public function unreadCount()
     {
-        return auth()->user()->unreadNotifications()->count();
+        return auth()->user()
+            ->unreadNotifications()
+            ->count();
     }
 
     public function markAsRead(string $id): void
     {
-        auth()->user()->notifications()->where('id', $id)->first()?->markAsRead();
+        $notification = auth()->user()
+            ->unreadNotifications()
+            ->where('id', $id)
+            ->first();
+
+        if ($notification) {
+            $notification->markAsRead();
+        }
 
         unset($this->notifications, $this->unreadCount);
     }
 
     public function markAllAsRead(): void
     {
-        auth()->user()->unreadNotifications()->update(['read_at' => now()]);
+        auth()->user()
+            ->unreadNotifications()
+            ->get()
+            ->each(fn ($notification) => $notification->markAsRead());
 
         unset($this->notifications, $this->unreadCount);
     }
 
-    #[On('echo-private:office.{office},.ViolationUpdated')]
-    public function refreshBell(): void
+    // Chairman and Dean: listen to their own department channel.
+    #[On('echo-private:office.{office}.department.{departmentId},.ViolationUpdated')]
+    public function refreshDepartmentBell(): void
+    {
+        if (!in_array($this->office, ['chairman', 'dean'], true)) {
+            return;
+        }
+
+        $this->refreshNotifications();
+    }
+
+    // SAO: listen to the general SAO channel.
+    #[On('echo-private:office.sao,.ViolationUpdated')]
+    public function refreshSaoBell(): void
+    {
+        if ($this->office !== 'sao') {
+            return;
+        }
+
+        $this->refreshNotifications();
+    }
+
+    private function refreshNotifications(): void
     {
         unset($this->notifications, $this->unreadCount);
     }
 };
 ?>
 
-<div x-data="{ open: false }" class="relative">
-    <div class="flex justify-end">
-        <button type="button" @click="open = !open" class="relative p-3 rounded-xl hover:bg-gray-100 transition">
-            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-5-5.9V4a1 1 0 00-2 0v1.1A6 6 0 006 11v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0" />
-            </svg>
+<div x-data="{ bellOpen: false }" class="relative">
+    <button type="button" @click="bellOpen = !bellOpen" class="relative p-2 rounded-xl hover:bg-gray-100 transition focus:outline-none">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-5-5.9V4a1 1 0 00-2 0v1.1A6 6 0 006 11v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0" />
+        </svg>
 
-            @if ($this->unreadCount > 0)
-                <span class="absolute top-1 right-1 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
-                    {{ $this->unreadCount > 99 ? '99+' : $this->unreadCount }}
-                </span>
-            @endif
-        </button>
-    </div>
+        @if ($this->unreadCount > 0)
+            <span class="absolute top-0.5 right-0.5 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold">
+                {{ $this->unreadCount > 99 ? '99+' : $this->unreadCount }}
+            </span>
+        @endif
+    </button>
 
-    <div x-show="open" @click.outside="open = false" x-transition x-cloak
+    <div x-show="bellOpen" @click.outside="bellOpen = false" x-transition x-cloak wire:ignore.self
         class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
 
         <div class="p-4 border-b border-gray-100 flex items-center justify-between">

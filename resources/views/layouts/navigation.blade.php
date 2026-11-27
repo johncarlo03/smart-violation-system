@@ -32,11 +32,11 @@
                         </x-nav-link>
                     @endif
 
-                    @if(in_array($navUser->role, [2, 5]))
+                    {{-- @if(in_array($navUser->role, [2, 5])) --}}
                         <x-nav-link :href="route('teacher.reports.index')" :active="request()->routeIs('teacher.reports.index')">
                             {{ __('My Reports') }}
                         </x-nav-link>
-                    @endif
+                    {{-- @endif --}}
                 </div>
             </div>
 
@@ -182,13 +182,13 @@
                     </a>
                 @endif
 
-                @if(in_array($navUser->role, [2, 5]))
+                {{-- @if(in_array($navUser->role, [2, 5])) --}}
                     <a href="{{ route('teacher.reports.index') }}"
                        @click="open = false"
                        class="block px-4 py-2.5 rounded-lg text-sm font-semibold transition {{ request()->routeIs('teacher.reports.index') ? 'bg-gray-100 text-gray-900 border-l-4 border-red-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
                         {{ __('My Reports') }}
                     </a>
-                @endif
+                {{-- @endif --}}
 
                 <a href="{{ route('profile.edit') }}"
                    @click="open = false"

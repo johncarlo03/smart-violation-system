@@ -29,7 +29,7 @@ new class extends Component
     public function violations()
     {
         $user = auth()->user();
-
+        
         $office = match ((int) $user->role) {
             7 => 'dean',
             6 => 'chairman',
@@ -57,6 +57,15 @@ new class extends Component
         if (!$office) {
             return $query->whereRaw('1 = 0')->simplePaginate(10);
         }
+
+        // Restrict Chairman and Dean to their assigned department.
+if (in_array($office, ['chairman', 'dean'], true)) {
+    if (!$user->department_id) {
+        abort(403, 'Your account has no assigned department.');
+    }
+
+    $query->where('department_id', $user->department_id);
+}
 
         // Current office's pending violations and
         // violations finalized by this office.

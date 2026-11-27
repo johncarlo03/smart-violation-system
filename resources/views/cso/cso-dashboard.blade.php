@@ -128,6 +128,16 @@
                 SAO Violation Report
             </h2>
             @endif
+            @if(in_array(Auth::user()->role, [6]))
+            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                Chairman Violation Report
+            </h2>
+            @endif
+            @if(in_array(Auth::user()->role, [7]))
+            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                Dean Violation Report
+            </h2>
+            @endif
             @if(auth()->user()->role != 2)
                 <a href="{{ url()->previous(route('dashboard')) }}"
                     class="w-full sm:w-auto text-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 shrink-0">
@@ -204,8 +214,8 @@
             const imageFile = event.target.files[0];
             if (!imageFile) return;
 
-            console.log('originalFile instanceof Blob', imageFile instanceof Blob);
-            console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+          //  console.log('originalFile instanceof Blob', imageFile instanceof Blob);
+          //  console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
             const submitBtn = document.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.innerText;
@@ -220,7 +230,7 @@
 
             try {
                 const compressedFile = await imageCompression(imageFile, options);
-                console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`);
+               // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`);
 
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(new File([compressedFile], imageFile.name, {
@@ -229,9 +239,9 @@
 
                 event.target.files = dataTransfer.files;
 
-                alert('Image optimized for faster upload!');
+              //  alert('Image optimized for faster upload!');
             } catch (error) {
-                console.log(error);
+              //  console.log(error);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalBtnText;
@@ -274,7 +284,7 @@
             const selectedId = offenseSelect.getValue();
 
             if (!selectedId) {
-                alert('Please select an offense.');
+           //     alert('Please select an offense.');
                 return;
             }
 
@@ -325,11 +335,11 @@
                     3: 'border-green-800',
                     4: 'border-yellow-500'
                 };
-                console.log("Current Student:", data.name, "Count:", data.violation_count);
+              //  console.log("Current Student:", data.name, "Count:", data.violation_count);
 
 
                 const ringClass = ringColors[studentDeptId] || 'border-indigo-500';
-                console.log(studentDeptId);
+                //console.log(studentDeptId);
 
                 studentPhoto.classList.add(ringClass);
                 document.getElementById('modal_student_name').innerText = data.name;

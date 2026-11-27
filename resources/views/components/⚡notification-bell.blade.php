@@ -1,8 +1,6 @@
 <?php
 
 use Livewire\Component;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\On;
 
 new class extends Component {
 
@@ -23,111 +21,71 @@ new class extends Component {
         $this->departmentId = $user->department_id
             ? (int) $user->department_id
             : null;
-
-        if (
-            in_array($this->office, ['dean', 'chairman'], true)
-            && $this->departmentId === null
-        ) {
-            abort(403, 'Your account has no assigned department.');
-        }
     }
 
-    #[Computed]
-    public function notifications()
+    public function getListeners(): array
     {
-        return auth()->user()
-            ->notifications()
-            ->latest()
-            ->take(10)
-            ->get();
-    }
+        $userId = auth()->id();
 
-    #[Computed]
-    public function unreadCount()
-    {
-        return auth()->user()
-            ->unreadNotifications()
-            ->count();
+        return [
+            // Triggered immediately by violation-management on the dashboard
+            'notification-received' => '$refresh',
+        ];
     }
 
     public function markAsRead(string $id): void
     {
-        $notification = auth()->user()
-            ->unreadNotifications()
+        auth()->user()
+            ->notifications()
             ->where('id', $id)
-            ->first();
-
-        if ($notification) {
-            $notification->markAsRead();
-        }
-
-        unset($this->notifications, $this->unreadCount);
+            ->update(['read_at' => now()]);
     }
 
     public function markAllAsRead(): void
     {
         auth()->user()
             ->unreadNotifications()
-            ->get()
-            ->each(fn ($notification) => $notification->markAsRead());
-
-        unset($this->notifications, $this->unreadCount);
+            ->update(['read_at' => now()]);
     }
 
-    // Chairman and Dean: listen to their own department channel.
-    #[On('echo-private:office.{office}.department.{departmentId},.ViolationUpdated')]
-    public function refreshDepartmentBell(): void
+    public function with(): array
     {
-        if (!in_array($this->office, ['chairman', 'dean'], true)) {
-            return;
-        }
+        $user = auth()->user();
 
-        $this->refreshNotifications();
-    }
-
-    // SAO: listen to the general SAO channel.
-    #[On('echo-private:office.sao,.ViolationUpdated')]
-    public function refreshSaoBell(): void
-    {
-        if ($this->office !== 'sao') {
-            return;
-        }
-
-        $this->refreshNotifications();
-    }
-
-    private function refreshNotifications(): void
-    {
-        unset($this->notifications, $this->unreadCount);
+        return [
+            'notifications' => $user->notifications()->latest()->take(10)->get(),
+            'unreadCount'   => $user->unreadNotifications()->count(),
+        ];
     }
 };
 ?>
 
-<div x-data="{ bellOpen: false }" class="relative">
+<div x-data="{ bellOpen: false }" class="relative"
+     x-on:show-violation-toast.window="setTimeout(() => $wire.$refresh(), 1500)">
     <button type="button" @click="bellOpen = !bellOpen" class="relative p-2 rounded-xl hover:bg-gray-100 transition focus:outline-none">
         <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-5-5.9V4a1 1 0 00-2 0v1.1A6 6 0 006 11v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0" />
         </svg>
 
-        @if ($this->unreadCount > 0)
+        @if ($unreadCount > 0)
             <span class="absolute top-0.5 right-0.5 min-w-5 h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-bold">
-                {{ $this->unreadCount > 99 ? '99+' : $this->unreadCount }}
+                {{ $unreadCount > 99 ? '99+' : $unreadCount }}
             </span>
         @endif
     </button>
 
-    <div x-show="bellOpen" @click.outside="bellOpen = false" x-transition x-cloak wire:ignore.self
+    <div x-show="bellOpen" @click.outside="bellOpen = false" x-transition x-cloak
         class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 overflow-hidden">
 
         <div class="p-4 border-b border-gray-100 flex items-center justify-between">
             <div>
                 <h3 class="font-bold text-gray-800">Notifications</h3>
-                <p class="text-xs text-gray-500">{{ $this->unreadCount }} unread</p>
+                <p class="text-xs text-gray-500">{{ $unreadCount }} unread</p>
             </div>
 
-            @if ($this->unreadCount > 0)
-                <button type="button" wire:click="markAllAsRead" wire:loading.attr="disabled"
+            @if ($unreadCount > 0)
+                <button type="button" wire:click.stop="markAllAsRead" wire:loading.attr="disabled"
                     wire:target="markAllAsRead"
                     class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 disabled:opacity-50">
                     <span wire:loading.remove wire:target="markAllAsRead">Mark all as read</span>
@@ -137,9 +95,9 @@ new class extends Component {
         </div>
 
         <div class="max-h-96 overflow-y-auto">
-            @forelse ($this->notifications as $notification)
+            @forelse ($notifications as $notification)
                 <button type="button" wire:key="notification-{{ $notification->id }}"
-                    wire:click="markAsRead('{{ $notification->id }}')"
+                    wire:click.stop="markAsRead('{{ $notification->id }}')"
                     class="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition
                            {{ $notification->read_at ? 'bg-white' : 'bg-indigo-50/60' }}">
                     <div class="flex gap-3">
@@ -176,3 +134,12 @@ new class extends Component {
         </div>
     </div>
 </div>
+
+@script
+<script>
+    if (window.Echo) {
+        window.Echo.private('App.Models.User.' + @js(auth()->id()))
+            .notification(() => $wire.$refresh());
+    }
+</script>
+@endscript

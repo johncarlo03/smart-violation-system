@@ -112,50 +112,39 @@ new class extends Component {
         return $this->summaryStats->major;
     }
 
-
-
-    #[On('echo-private:office.{office}.department.{departmentId},.ViolationUpdated')]
-    public function refreshDepartmentViolations($event = []): void
-    {
-        if (!in_array($this->office, ['chairman', 'dean'], true)) {
-            return;
-        }
-
-        $this->refreshDashboard($event);
+public function getListeners(): array
+{
+    if ($this->office === 'sao') {
+        return [
+            'echo-private:office.sao,.ViolationUpdated' => 'refreshDashboard',
+        ];
     }
 
-    #[On('echo-private:office.sao,.ViolationUpdated')]
-    public function refreshSaoViolations($event = []): void
-    {
-        if ($this->office !== 'sao') {
-            return;
-        }
+    return [
+        "echo-private:office.{$this->office}.department.{$this->departmentId},.ViolationUpdated" => 'refreshDashboard',
+    ];
+}
 
-        $this->refreshDashboard($event);
-    }
+public function refreshDashboard(array $event = []): void
+{
+    unset(
+        $this->summaryStats,
+        $this->totalViolations,
+        $this->pendingReview,
+        $this->majorIncidents,
+        $this->topOffenses,
+        $this->deptStats,
+        $this->violations,
+    );
 
-    private function refreshDashboard(array $event = []): void
-    {
-        unset(
-            $this->summaryStats,
-            $this->totalViolations,
-            $this->pendingReview,
-            $this->majorIncidents,
-            $this->topOffenses,
-            $this->deptStats,
-            $this->violations,
-            $this->notifications,
-            $this->unreadNotificationCount
-        );
-
-        $this->dispatch(
-            'show-violation-toast',
-            message: $event['message'] ?? 'A violation has been updated.',
-            student: $event['student'] ?? 'Student',
-            offense: $event['offense'] ?? 'Violation',
-            action: $event['action'] ?? 'updated'
-        );
-    }
+    $this->dispatch(
+        'show-violation-toast',
+        message: $event['message'] ?? 'A violation has been updated.',
+        student: $event['student'] ?? 'Student',
+        offense: $event['offense'] ?? 'Violation',
+        action: $event['action'] ?? 'updated'
+    );
+}
 
 
     #[Computed]

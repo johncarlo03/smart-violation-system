@@ -27,6 +27,7 @@
         offense = $event.detail.offense;
         action = $event.detail.action;
         open = true;
+        playNotificationChime();
         clearTimeout(timer);
         timer = setTimeout(() => open = false, 5000);
     " x-show="open" x-transition x-cloak class="fixed top-5 right-5 z-[100] w-full max-w-sm">
@@ -141,4 +142,34 @@
             closeEvidenceModal();
         }
     });
+
+    function playNotificationChime() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioCtx();
+
+            const playTone = (freq, startTime, duration) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0.15, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            };
+
+            const now = ctx.currentTime;
+            playTone(587.33, now, 0.18);        // D5
+            playTone(880.00, now + 0.12, 0.35); // A5
+        } catch (e) {
+            // Browser blocked autoplay before user interaction
+        }
+    }
 </script>

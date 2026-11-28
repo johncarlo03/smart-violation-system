@@ -2,6 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
     .ts-dropdown {
@@ -9,6 +10,7 @@
     }
 
     @media (max-width: 639px) {
+
         .ts-wrapper.single .ts-control,
         .ts-wrapper .ts-control input {
             font-size: 16px !important;
@@ -35,15 +37,17 @@
                 <h3 id="modal_student_name" class="text-lg sm:text-xl font-bold text-gray-800 break-words"></h3>
                 <p id="modal_student_details" class="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4 break-words"></p>
 
-                <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-2 text-left bg-gray-50 p-3 sm:p-4 rounded-lg text-xs sm:text-sm">
+                <div
+                    class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-2 text-left bg-gray-50 p-3 sm:p-4 rounded-lg text-xs sm:text-sm">
                     <div class="min-w-0"><span class="text-gray-400">ID:</span> <span id="modal_student_id"
                             class="font-semibold break-all"></span></div>
                     <div class="min-w-0"><span class="text-gray-400">Year:</span> <span id="modal_student_year"
                             class="font-semibold"></span></div>
                     <div class="min-w-0"><span class="text-gray-400">Course:</span> <span id="modal_student_course"
                             class="font-semibold text-indigo-600 break-words"></span></div>
-                    <div class="min-w-0"><span class="text-gray-400">Department:</span> <span id="modal_student_department"
-                            class="font-semibold text-indigo-600 break-words"></span></div>
+                    <div class="min-w-0"><span class="text-gray-400">Department:</span> <span
+                            id="modal_student_department" class="font-semibold text-indigo-600 break-words"></span>
+                    </div>
                 </div>
 
                 <div class="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
@@ -66,7 +70,8 @@
             <div
                 class="relative z-10 w-full max-w-2xl overflow-visible text-left transition-all transform bg-white rounded-xl sm:rounded-lg shadow-xl my-auto">
                 <div class="px-4 pt-4 pb-4 bg-white rounded-t-xl sm:rounded-t-lg sm:p-6 sm:pb-4">
-                    <h3 class="text-base sm:text-lg font-medium leading-6 text-gray-900" id="modal-title">Select Violation Type</h3>
+                    <h3 class="text-base sm:text-lg font-medium leading-6 text-gray-900" id="modal-title">Select
+                        Violation Type</h3>
 
                     <div class="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
@@ -96,14 +101,17 @@
 
                         <div id="offenseList" class="hidden mt-4 sm:mt-6 border-t pt-4">
                             <h4 id="categoryTitle" class="font-bold text-sm sm:text-base text-gray-700 mb-2"></h4>
-                            <select id="specificOffense" class="block w-full border-gray-300 rounded-md shadow-sm text-base sm:text-sm">
+                            <select id="specificOffense"
+                                class="block w-full border-gray-300 rounded-md shadow-sm text-base sm:text-sm">
                             </select>
-                            <x-primary-button type="button" onclick="confirmViolation()" class="mt-4 w-full sm:w-auto justify-center">Confirm
+                            <x-primary-button type="button" onclick="confirmViolation()"
+                                class="mt-4 w-full sm:w-auto justify-center">Confirm
                                 Selection</x-primary-button>
                         </div>
                     </div>
                 </div>
-                <div class="px-4 py-3 bg-gray-50 rounded-b-xl sm:rounded-b-lg sm:px-6 flex flex-col sm:flex-row-reverse gap-2">
+                <div
+                    class="px-4 py-3 bg-gray-50 rounded-b-xl sm:rounded-b-lg sm:px-6 flex flex-col sm:flex-row-reverse gap-2">
                     <button type="button" onclick="closeModal()"
                         class="w-full px-4 py-2.5 sm:py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 sm:w-auto">Cancel</button>
                 </div>
@@ -114,29 +122,29 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-w-0">
             @if(in_array(Auth::user()->role, [2]))
-            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
-                Campus Safety Officer's Dashboard
-            </h2>
+                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                    Campus Safety Officer's Dashboard
+                </h2>
             @endif
             @if(in_array(Auth::user()->role, [5]))
-            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
-                Teaching Staff's Dashboard
-            </h2>
+                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                    Teaching Staff's Dashboard
+                </h2>
             @endif
             @if(in_array(Auth::user()->role, [3]))
-            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
-                SAO Violation Report
-            </h2>
+                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                    SAO Violation Report
+                </h2>
             @endif
             @if(in_array(Auth::user()->role, [6]))
-            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
-                Chairman Violation Report
-            </h2>
+                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                    Chairman Violation Report
+                </h2>
             @endif
             @if(in_array(Auth::user()->role, [7]))
-            <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
-                Dean Violation Report
-            </h2>
+                <h2 class="font-semibold text-lg sm:text-xl text-gray-800 leading-tight truncate">
+                    Dean Violation Report
+                </h2>
             @endif
             @if(auth()->user()->role != 2)
                 <a href="{{ url()->previous(route('dashboard')) }}"
@@ -154,14 +162,16 @@
 
                     <h3 class="text-base sm:text-lg font-bold mb-4">Report New Violation</h3>
 
-                    <form method="POST" action="{{ route('violations.store') }}" enctype="multipart/form-data" class="min-w-0">
+                    <form id="violationForm" action="{{ route('violations.store') }}" enctype="multipart/form-data"
+                        class="min-w-0">
                         @csrf
                         <div class="mb-4 min-w-0">
                             <x-input-label for="rfid_input" value="Scan RFID or Search Student" />
                             {{-- <input type="text" id="rfid_listener" class="opacity-0 absolute" autofocus
                                 autocomplete="off"> --}}
 
-                            <select id="student_id" name="student_id" placeholder="Search student..." class="w-full text-base sm:text-sm">
+                            <select id="student_id" name="student_id" placeholder="Search student..."
+                                class="w-full text-base sm:text-sm">
                                 <option value="">-- Select or Scan --</option>
                             </select>
                         </div>
@@ -169,10 +179,12 @@
                         <div class="mb-4 min-w-0">
                             <x-input-label for="type_display" value="Violation Category & Type" />
                             <div class="flex flex-col sm:flex-row gap-2 min-w-0">
-                                <x-text-input id="type_display" class="block mt-1 w-full bg-gray-100 text-base sm:text-sm min-w-0" readonly
+                                <x-text-input id="type_display"
+                                    class="block mt-1 w-full bg-gray-100 text-base sm:text-sm min-w-0" readonly
                                     placeholder="Click 'Select' to browse manual..." required />
                                 <input type="hidden" name="offense_id" id="type_hidden"> <x-secondary-button
-                                    type="button" onclick="openModal()" class="mt-1 w-full sm:w-auto justify-center shrink-0">Select</x-secondary-button>
+                                    type="button" onclick="openModal()"
+                                    class="mt-1 w-full sm:w-auto justify-center shrink-0">Select</x-secondary-button>
                             </div>
                         </div>
 
@@ -210,12 +222,53 @@
 
 
     <script>
+
+
+        document.getElementById('violationForm').addEventListener('submit', function (event) {
+            const studentId = document.getElementById('student_id').value;
+            const offenseId = document.getElementById('type_hidden').value;
+
+            if (!studentId) {
+                event.preventDefault();
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Student Required',
+                    text: 'Please select a student before submitting the report.',
+                    confirmButtonText: 'Okay',
+                    confirmButtonColor: '#4f46e5'
+                }).then(() => {
+                    document.getElementById('student_id').focus();
+                });
+
+                return;
+            }
+
+            if (!offenseId) {
+                event.preventDefault();
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Offense Required',
+                    text: 'Please select an offense before submitting the report.',
+                    confirmButtonText: 'Select Offense',
+                    confirmButtonColor: '#4f46e5'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        openModal();
+                    }
+                });
+
+                return;
+            }
+        });
+
         async function handleImageUpload(event) {
             const imageFile = event.target.files[0];
             if (!imageFile) return;
 
-          //  console.log('originalFile instanceof Blob', imageFile instanceof Blob);
-          //  console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+            //  console.log('originalFile instanceof Blob', imageFile instanceof Blob);
+            //  console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
             const submitBtn = document.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.innerText;
@@ -230,7 +283,7 @@
 
             try {
                 const compressedFile = await imageCompression(imageFile, options);
-               // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`);
+                // console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`);
 
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(new File([compressedFile], imageFile.name, {
@@ -239,9 +292,9 @@
 
                 event.target.files = dataTransfer.files;
 
-              //  alert('Image optimized for faster upload!');
+                //  alert('Image optimized for faster upload!');
             } catch (error) {
-              //  console.log(error);
+                //  console.log(error);
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = originalBtnText;
@@ -284,7 +337,7 @@
             const selectedId = offenseSelect.getValue();
 
             if (!selectedId) {
-           //     alert('Please select an offense.');
+                //     alert('Please select an offense.');
                 return;
             }
 
@@ -335,7 +388,7 @@
                     3: 'border-green-800',
                     4: 'border-yellow-500'
                 };
-              //  console.log("Current Student:", data.name, "Count:", data.violation_count);
+                //  console.log("Current Student:", data.name, "Count:", data.violation_count);
 
 
                 const ringClass = ringColors[studentDeptId] || 'border-indigo-500';

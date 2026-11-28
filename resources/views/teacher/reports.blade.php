@@ -15,6 +15,11 @@
 
     @php
         $current = request('status');
+        $pendingStatuses = [
+            'pending_chairman',
+            'pending_dean',
+            'pending_sao',
+        ];
         $tabs = [
             ''          => ['All', $total],
             'pending'   => ['Under review', $counts['pending'] ?? 0],
@@ -73,9 +78,10 @@
                                 </div>
 
                                 <div class="shrink-0 text-right">
-                                    @if($v->status === 'pending')
+                                    @if(in_array($v->status, $pendingStatuses, true))
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Under review
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                            Under review
                                         </span>
                                     @elseif($v->status === 'resolved')
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
@@ -109,7 +115,11 @@
                                 </span>
 
                                 <span class="text-right">
-                                    @if($v->status === 'pending')
+                                    @if($v->status === 'pending_chairman')
+                                        <span class="text-gray-400">Waiting for the Chairman</span>
+                                    @elseif($v->status === 'pending_dean')
+                                        <span class="text-gray-400">Waiting for the Dean</span>
+                                    @elseif($v->status === 'pending_sao')
                                         <span class="text-gray-400">Waiting for the SAO</span>
                                     @elseif($v->status === 'resolved')
                                         @if($v->penalty)
@@ -171,11 +181,25 @@
                                     </td>
 
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($v->status === 'pending')
+                                        @if(in_array($v->status, $pendingStatuses, true))
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Under review
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                                Under review
                                             </span>
-                                            <p class="text-xs text-gray-400 mt-1.5">Waiting for the SAO</p>
+
+                                            <p class="text-xs text-gray-400 mt-1.5">
+                                                @switch($v->status)
+                                                    @case('pending_chairman')
+                                                        Waiting for the Chairman
+                                                        @break
+                                                    @case('pending_dean')
+                                                        Waiting for the Dean
+                                                        @break
+                                                    @case('pending_sao')
+                                                        Waiting for the SAO
+                                                        @break
+                                                @endswitch
+                                            </p>
 
                                         @elseif($v->status === 'resolved')
                                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">

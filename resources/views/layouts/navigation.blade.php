@@ -32,7 +32,7 @@
                         </x-nav-link>
                     @endif
 
-                    @if(in_array($navUser->role, [1, 2, 5, 6, 7]))
+                    @if(in_array($navUser->role, [2, 3, 5, 6, 7]))
                         <x-nav-link :href="route('teacher.reports.index')" :active="request()->routeIs('teacher.reports.index')">
                             {{ __('My Reports') }}
                         </x-nav-link>
